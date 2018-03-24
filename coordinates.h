@@ -15,6 +15,8 @@ public:
     const coordinates operator -(const coordinates& other) const;
     const coordinates operator +(const coordinates& other) const;
 
+    float distance(const coordinates& other) const;
+
 private:
     float latitude;
     float longitude;

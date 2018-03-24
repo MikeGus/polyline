@@ -1,15 +1,143 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <vector>
+#include <QString>
+#include <QDebug>
+#include <QInputDialog>
+#include <QDateTime>
+#include "coordinates.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
-{
+    ui(new Ui::MainWindow) {
+
     ui->setupUi(this);
+
+    for (int i = 0; i < ui->routeTableWidget->horizontalHeader()->count(); ++i) {
+        ui->routeTableWidget->horizontalHeader()->setSectionResizeMode(
+                    i, QHeaderView::Stretch);
+    }
+
+    for (int i = 0; i < ui->pointTableWidget->horizontalHeader()->count(); ++i) {
+        ui->pointTableWidget->horizontalHeader()->setSectionResizeMode(
+                    i, QHeaderView::Stretch);
+    }
+
+    ui->routeTableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->pointTableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->routeTableWidget->setEditTriggers(QTableWidget::NoEditTriggers);
+    ui->pointTableWidget->setEditTriggers(QTableWidget::NoEditTriggers);
+ }
+
+MainWindow::~MainWindow() {
+    delete ui;
 }
 
-MainWindow::~MainWindow()
+void MainWindow::on_addRouteButton_clicked() {
+    QString str = QInputDialog::getText(this, tr("Введите название"), tr("Название:"));
+    route newRoute(str);
+
+    addRoute(newRoute);
+}
+
+void MainWindow::on_deleteRouteButton_clicked() {
+    QList<QTableWidgetItem*> selectedItems(ui->routeTableWidget->selectedItems());
+    if (selectedItems.empty()) {
+        return;
+    }
+
+    int deletedRow = selectedItems.first()->row();
+    auto it = routes.begin() + deletedRow;
+    routes.erase(it);
+    ui->routeTableWidget->removeRow(deletedRow);
+}
+
+void MainWindow::addRoute(route& newRoute) {
+    ui->routeTableWidget->setRowCount(routes.size() + 1);
+
+    QTableWidgetItem* routeName = new QTableWidgetItem(newRoute.getName());
+    QTableWidgetItem* routeLength = new QTableWidgetItem(QString::number(newRoute.length(), 'f', 3));
+    QTableWidgetItem* routeDate = new QTableWidgetItem(QDateTime::currentDateTime().toString());
+
+    ui->routeTableWidget->setItem(routes.size(), 0, routeName);
+    ui->routeTableWidget->setItem(routes.size(), 1, routeLength);
+    ui->routeTableWidget->setItem(routes.size(), 2, routeDate);
+
+    ui->polylineText->clear();
+    ui->polylineText->setText(QString::fromStdString(newRoute.generatePolyline().get()));
+
+    routes.push_back(newRoute);
+
+    ui->pointTableWidget->clearContents();
+    size_t numberOfPoints = newRoute.getNumberOfPoints();
+
+    ui->pointTableWidget->setRowCount(numberOfPoints);
+    for (size_t i = 0; i < numberOfPoints; ++i) {
+        ui->pointTableWidget->setItem(i, 0,
+                                      new QTableWidgetItem(QString::number(newRoute[i].getLatitude())));
+        ui->pointTableWidget->setItem(i, 1,
+                                      new QTableWidgetItem(QString::number(newRoute[i].getLongitude())));
+    }
+}
+
+void MainWindow::on_createWaypointButton_clicked() {
+    if (ui->routeTableWidget->selectedItems().empty()) {
+        return;
+    }
+    coordinates newCoordinates(ui->latitudeDoubleSpinBox->value(), ui->longitudeDoubleSpinBox->value());
+    size_t selectedRow = ui->routeTableWidget->selectedItems().first()->row();
+    routes.at(selectedRow).addLast(newCoordinates);
+
+    updateRoute(selectedRow);
+
+    size_t addRow = ui->pointTableWidget->rowCount();
+    ui->pointTableWidget->setRowCount(addRow + 1);
+    ui->pointTableWidget->setItem(addRow, 0,
+                                  new QTableWidgetItem(QString::number(newCoordinates.getLatitude(), 'f', 5)));
+    ui->pointTableWidget->setItem(addRow, 1,
+                                  new QTableWidgetItem(QString::number(newCoordinates.getLongitude(), 'f', 5)));
+}
+
+void MainWindow::updateRoute(size_t selectedRow) {
+    ui->routeTableWidget->setItem(selectedRow, 1, new QTableWidgetItem(QString::number(routes.at(selectedRow).length(), 'f', 3)));
+    ui->routeTableWidget->setItem(selectedRow, 2, new QTableWidgetItem(QDateTime::currentDateTime().toString()));
+    ui->polylineText->setText(QString::fromStdString(routes[selectedRow].generatePolyline().get()));
+}
+
+void MainWindow::on_deleteWaypointButton_clicked() {
+    if (ui->pointTableWidget->selectedItems().empty()
+            || ui->routeTableWidget->selectedItems().empty()) {
+        return;
+    }
+    size_t selectedRoute = ui->routeTableWidget->selectedItems().first()->row();
+    size_t selectedPoint = ui->pointTableWidget->selectedItems().first()->row();
+
+    routes[selectedRoute].remove(selectedPoint);
+    updateRoute(selectedRoute);
+
+    ui->pointTableWidget->removeRow(selectedPoint);
+}
+
+void MainWindow::on_changeWaypointButton_clicked()
 {
-    delete ui;
+    if (ui->pointTableWidget->selectedItems().empty()
+            || ui->routeTableWidget->selectedItems().empty()) {
+        return;
+    }
+
+    size_t selectedRoute = ui->routeTableWidget->selectedItems().first()->row();
+    size_t selectedPoint = ui->pointTableWidget->selectedItems().first()->row();
+
+    coordinates newCoordinates = coordinates(ui->latitudeDoubleSpinBox->value(),
+                                             ui->longitudeDoubleSpinBox->value());
+    routes[selectedRoute][selectedPoint] = newCoordinates;
+
+    updateRoute(selectedRoute);
+
+    ui->pointTableWidget->setItem(selectedPoint, 0,
+                                  new QTableWidgetItem(QString::number(newCoordinates.getLatitude(), 'f', 5)));
+    ui->pointTableWidget->setItem(selectedPoint, 1,
+                                  new QTableWidgetItem(QString::number(newCoordinates.getLongitude(), 'f', 5)));
+
 }

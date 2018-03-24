@@ -1,6 +1,10 @@
 #include "route.h"
 #include <cmath>
+#include <vector>
+#include <QDebug>
 
+route::route(const QString& name): name(name) {
+}
 
 route::route(const polyline& poly) {
     unsigned waypointPolyLength = 12;
@@ -52,6 +56,7 @@ void route::remove(const int position) {
 }
 
 const polyline route::generatePolyline() const {
+
     polyline result;
     if (waypoints.empty()) {
         return result;
@@ -61,9 +66,12 @@ const polyline route::generatePolyline() const {
     result.append(generatePolylineForWaypoint(*iterator));
     coordinates previous(*iterator);
 
-    iterator++;
+
+
     while (iterator != waypoints.end()) {
+        ++iterator;
         result.append(generatePolylineForWaypoint(*iterator - previous));
+        previous = *iterator;
     }
 
     return result;
@@ -75,31 +83,40 @@ const polyline route::generatePolylineForWaypoint(const coordinates &waypoint) c
     return latitude.append(longitude);
 }
 
+
+
 const polyline route::generatePolylineForValue(const float value) const {
-    int resultValue = value * 1e5 + 0.5;
-    bool negative = resultValue < 0;
-    if (negative) {
-        resultValue ^= 1;
-        resultValue += 1;
-    }
-    resultValue <<= 1;
-    if (negative) {
-        resultValue ^= 1;
-    }
-    char mask = 31;
-    char bitmap[7];
-    bitmap[6] = 0;
-    for (int i = 0; i < 6; ++i) {
-        bitmap[5 - i] = resultValue & mask;
-        resultValue >>= 5;
-    }
-    for (int i = 0; i < 5; ++i) {
-        bitmap[i] += 0x20;
-        bitmap[i] += 63;
+
+    char result[6];
+
+    int val = value * 1e5 + 0.5;
+
+    bool isNeg = val < 0;
+    val <<= 1;
+
+    if (isNeg) {
+        val = ~val;
     }
 
-    polyline result(bitmap);
-    return result;
+    unsigned count = 0;
+
+    do {
+      result[count] = val & 0x1f;
+      val >>= 5;
+
+      if (val) {
+          result[count] |= 0x20;
+      }
+
+      result[count] += 63;
+
+      ++count;
+    } while (val);
+
+    result[count] = 0;
+    polyline resPoly = polyline(result);
+
+    return resPoly;
 }
 
 const coordinates route::generateWaypointFromPolyline(const polyline& line) const {
@@ -155,4 +172,30 @@ float route::generateValueFromPolyline(const polyline& line) const {
     }
 
     return value / 1e5;
+}
+
+float route::length() const {
+    if (waypoints.size() < 2) {
+        return 0;
+    }
+    float general = 0;
+    auto itFirst = waypoints.cbegin();
+    for (auto itSecond = itFirst + 1; itSecond != waypoints.cend();
+         ++itFirst, ++itSecond) {
+        general += (*itSecond).distance(*itFirst);
+    }
+
+    return general / 1000;
+}
+
+void route::setName(const QString& name) {
+    this->name = QString(name);
+}
+
+QString route::getName() const {
+    return name;
+}
+
+size_t route::getNumberOfPoints() const {
+    return waypoints.size();
 }
