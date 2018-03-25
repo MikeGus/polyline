@@ -112,13 +112,12 @@ const polyline route::generatePolyline() const {
     auto iterator(waypoints.begin());
     result.append(generatePolylineForWaypoint(*iterator));
     coordinates previous(*iterator);
-
-
+    ++iterator;
 
     while (iterator != waypoints.end()) {
-        ++iterator;
         result.append(generatePolylineForWaypoint(*iterator - previous));
         previous = *iterator;
+        ++iterator;
     }
 
     return result;

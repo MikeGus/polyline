@@ -23,6 +23,15 @@ void coordinates::setLongitude(const float longitude) {
 
 const coordinates coordinates::operator -(const coordinates& other) const {
     coordinates result(latitude - other.latitude, longitude - other.longitude);
+    if (result.latitude < - 90) {
+        result.latitude += 180;
+    } else if (result.latitude > 90) {
+        result.latitude -= 180;
+    } else if (result.longitude < - 180) {
+        result.longitude += 360;
+    } else if (result.longitude > 180) {
+        result.longitude -= 360;
+    }
     return result;
 }
 

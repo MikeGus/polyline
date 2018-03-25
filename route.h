@@ -11,7 +11,7 @@
 class route {
 public:
     route() = default;
-    route(const QString& name, const QString& date=QString());
+    route(const QString& name, const QString& date);
     route(const polyline& poly);
 
     void readFromFile(const QString& filename);
