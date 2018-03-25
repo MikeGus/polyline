@@ -5,8 +5,11 @@
 #include <QString>
 #include <QDebug>
 #include <QInputDialog>
+#include <QFileDialog>
 #include <QDateTime>
+#include <QClipboard>
 #include "coordinates.h"
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -36,7 +39,7 @@ MainWindow::~MainWindow() {
 
 void MainWindow::on_addRouteButton_clicked() {
     QString str = QInputDialog::getText(this, tr("Введите название"), tr("Название:"));
-    route newRoute(str);
+    route newRoute(str, QDateTime::currentDateTime().toString());
 
     addRoute(newRoute);
 }
@@ -58,27 +61,16 @@ void MainWindow::addRoute(route& newRoute) {
 
     QTableWidgetItem* routeName = new QTableWidgetItem(newRoute.getName());
     QTableWidgetItem* routeLength = new QTableWidgetItem(QString::number(newRoute.length(), 'f', 3));
-    QTableWidgetItem* routeDate = new QTableWidgetItem(QDateTime::currentDateTime().toString());
+    QTableWidgetItem* routeDate = new QTableWidgetItem(newRoute.getDate());
 
     ui->routeTableWidget->setItem(routes.size(), 0, routeName);
     ui->routeTableWidget->setItem(routes.size(), 1, routeLength);
     ui->routeTableWidget->setItem(routes.size(), 2, routeDate);
 
-    ui->polylineText->clear();
-    ui->polylineText->setText(QString::fromStdString(newRoute.generatePolyline().get()));
-
+    ui->routeTableWidget->selectRow(routes.size());
     routes.push_back(newRoute);
 
-    ui->pointTableWidget->clearContents();
-    size_t numberOfPoints = newRoute.getNumberOfPoints();
-
-    ui->pointTableWidget->setRowCount(numberOfPoints);
-    for (size_t i = 0; i < numberOfPoints; ++i) {
-        ui->pointTableWidget->setItem(i, 0,
-                                      new QTableWidgetItem(QString::number(newRoute[i].getLatitude())));
-        ui->pointTableWidget->setItem(i, 1,
-                                      new QTableWidgetItem(QString::number(newRoute[i].getLongitude())));
-    }
+    updateCurrentRoute(routes.size() - 1);
 }
 
 void MainWindow::on_createWaypointButton_clicked() {
@@ -119,8 +111,7 @@ void MainWindow::on_deleteWaypointButton_clicked() {
     ui->pointTableWidget->removeRow(selectedPoint);
 }
 
-void MainWindow::on_changeWaypointButton_clicked()
-{
+void MainWindow::on_changeWaypointButton_clicked() {
     if (ui->pointTableWidget->selectedItems().empty()
             || ui->routeTableWidget->selectedItems().empty()) {
         return;
@@ -140,4 +131,41 @@ void MainWindow::on_changeWaypointButton_clicked()
     ui->pointTableWidget->setItem(selectedPoint, 1,
                                   new QTableWidgetItem(QString::number(newCoordinates.getLongitude(), 'f', 5)));
 
+}
+
+void MainWindow::on_openRouteButton_clicked() {
+    QStringList files = QFileDialog::getOpenFileNames(this, tr("Выберите файлы"), QDir::homePath(), tr("GPX files (*.gpx)"));
+    for (auto file : files) {
+        QFileInfo fileInfo(file);
+        route newRoute(file, fileInfo.metadataChangeTime().toString());
+
+        newRoute.readFromFile(file);
+        addRoute(newRoute);
+    }
+}
+
+void MainWindow::updateCurrentRoute(size_t selectedRow) {
+    ui->polylineText->setText(QString::fromStdString(routes[selectedRow].generatePolyline().get()));
+
+    ui->pointTableWidget->clearContents();
+    size_t numberOfPoints = routes[selectedRow].getNumberOfPoints();
+
+    ui->pointTableWidget->setRowCount(numberOfPoints);
+    for (size_t i = 0; i < numberOfPoints; ++i) {
+        ui->pointTableWidget->setItem(i, 0,
+                                      new QTableWidgetItem(QString::number(routes[selectedRow][i].getLatitude())));
+        ui->pointTableWidget->setItem(i, 1,
+                                      new QTableWidgetItem(QString::number(routes[selectedRow][i].getLongitude())));
+    }
+
+}
+
+void MainWindow::on_routeTableWidget_cellClicked(int row, int column) {
+    Q_UNUSED(column);
+    updateCurrentRoute(row);
+}
+
+void MainWindow::on_copyPolylineButton_clicked() {
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    clipboard->setText(ui->polylineText->toPlainText());
 }

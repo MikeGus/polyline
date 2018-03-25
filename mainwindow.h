@@ -32,12 +32,19 @@ private slots:
 
     void on_changeWaypointButton_clicked();
 
+    void on_openRouteButton_clicked();
+
+    void on_routeTableWidget_cellClicked(int row, int column);
+
+    void on_copyPolylineButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     std::vector<route> routes;
 
     void addRoute(route& newRoute);
     void updateRoute(size_t selectedRow);
+    void updateCurrentRoute(size_t selectedRow);
 
 };
 

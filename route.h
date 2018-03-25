@@ -11,8 +11,10 @@
 class route {
 public:
     route() = default;
-    route(const QString& name);
+    route(const QString& name, const QString& date=QString());
     route(const polyline& poly);
+
+    void readFromFile(const QString& filename);
 
     coordinates& operator [](const int position);
     const coordinates& operator [](const int position) const;
@@ -28,6 +30,9 @@ public:
     void setName(const QString& name);
     QString getName() const;
 
+    void setDate(const QString& date);
+    QString getDate() const;
+
     size_t getNumberOfPoints() const;
     float length() const;
 
@@ -39,6 +44,7 @@ private:
     float generateValueFromPolyline(const polyline& line) const;
 
     QString name;
+    QString date;
     std::vector<coordinates> waypoints;
 };
 

@@ -2,8 +2,10 @@
 #include <cmath>
 #include <vector>
 #include <QDebug>
+#include <QFile>
+#include <QXmlStreamReader>
 
-route::route(const QString& name): name(name) {
+route::route(const QString& name, const QString& date): name(name), date(date) {
 }
 
 route::route(const polyline& poly) {
@@ -22,6 +24,51 @@ route::route(const polyline& poly) {
         coordinates current(generateWaypointFromPolyline(bufferPolyline));
         waypoints.push_back(current - previous);
         previous = current;
+    }
+}
+
+void route::readFromFile(const QString& filename) {
+    QFile file(filename);
+    if (!file.open(QFile::ReadOnly | QFile::Text)) {
+        return;
+    }
+
+    QXmlStreamReader reader(&file);
+    if (reader.readNextStartElement()) {
+        while (reader.readNextStartElement()) {
+            if (reader.name() == "trk") {
+                while (reader.readNextStartElement()) {
+                    if (reader.name() == "name") {
+                        name = reader.readElementText();
+                    } else if (reader.name() == "desc") {
+                        QString len = reader.readElementText();
+                        len.truncate(len.indexOf(" "));
+                    }
+                    else if (reader.name() == "trkseg") {
+                        while (!reader.isEndDocument()) {
+                            reader.readNext();
+                            if (reader.isStartElement()) {
+                                if (reader.name().toString() == "trkpt") {
+                                    double lat = reader.attributes().value("lat").toDouble();
+                                    double lon = reader.attributes().value("lon").toDouble();
+                                    coordinates newCoordinate(lat, lon);
+                                    waypoints.push_back(newCoordinate);
+                                }
+                            }
+                            else {
+                                reader.readNext();
+                            }
+                        }
+                    }
+                    else {
+                        reader.skipCurrentElement();
+                    }
+                }
+            }
+            else {
+                reader.skipCurrentElement();
+            }
+        }
     }
 }
 
@@ -82,8 +129,6 @@ const polyline route::generatePolylineForWaypoint(const coordinates &waypoint) c
     polyline longitude(generatePolylineForValue(waypoint.getLongitude()));
     return latitude.append(longitude);
 }
-
-
 
 const polyline route::generatePolylineForValue(const float value) const {
 
@@ -194,6 +239,14 @@ void route::setName(const QString& name) {
 
 QString route::getName() const {
     return name;
+}
+
+void route::setDate(const QString& date) {
+    this->date = date;
+}
+
+QString route::getDate() const {
+    return date;
 }
 
 size_t route::getNumberOfPoints() const {
