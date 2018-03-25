@@ -12,7 +12,7 @@ class route {
 public:
     route() = default;
     route(const QString& name, const QString& date);
-    route(const polyline& poly);
+    route(const QString& name, const QString& date, const polyline& poly);
 
     void readFromFile(const QString& filename);
 
@@ -39,9 +39,6 @@ public:
 private:
     const polyline generatePolylineForWaypoint(const coordinates& waypoint) const;
     const polyline generatePolylineForValue(const float value) const;
-
-    const coordinates generateWaypointFromPolyline(const polyline& line) const;
-    float generateValueFromPolyline(const polyline& line) const;
 
     QString name;
     QString date;

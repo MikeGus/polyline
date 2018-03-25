@@ -8,22 +8,41 @@
 route::route(const QString& name, const QString& date): name(name), date(date) {
 }
 
-route::route(const polyline& poly) {
-    unsigned waypointPolyLength = 12;
-    unsigned waypointNumber = poly.length() / waypointPolyLength;
-    coordinates previous;
+route::route(const QString &name, const QString &date, const polyline& poly):
+    name(name), date(date) {
+    waypoints.clear();
 
-    unsigned startIndex = 0;
-    for (unsigned i = 0; i < waypointNumber; ++i) {
-        char bufferCharPolyline[13];
-        bufferCharPolyline[waypointPolyLength] = 0;
-        for (unsigned i = startIndex; i < startIndex + waypointPolyLength; ++i) {
-            bufferCharPolyline[i] = poly[i];
-        }
-        polyline bufferPolyline(bufferCharPolyline);
-        coordinates current(generateWaypointFromPolyline(bufferPolyline));
-        waypoints.push_back(current - previous);
-        previous = current;
+    int len = poly.length();
+    int index = 0;
+
+    float lat = 0;
+    float lng = 0;
+
+    while (index < len) {
+        char b;
+        int shift = 0;
+        int result = 0;
+        do {
+            b = poly[index++] - 63;
+            result |= (b & 0x1f) << shift;
+            shift += 5;
+        } while (b >= 0x20);
+        float dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+        lat += dlat;
+
+        shift = 0;
+        result = 0;
+        do {
+            b = poly[index++] - 63;
+            result |= (b & 0x1f) << shift;
+            shift += 5;
+        } while (b >= 0x20);
+
+        float dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+        lng += dlng;
+
+        coordinates point(lat * 1e-5, lng * 1e-5);
+        waypoints.push_back(point);
     }
 }
 
@@ -161,61 +180,6 @@ const polyline route::generatePolylineForValue(const float value) const {
     polyline resPoly = polyline(result);
 
     return resPoly;
-}
-
-const coordinates route::generateWaypointFromPolyline(const polyline& line) const {
-
-    char str[7];
-    str[6] = 0;
-    for (int i = 0; i < 6; ++i) {
-        str[i] = line[i];
-    }
-    polyline latitude(str);
-    for (int i = 0; i < 6; ++i) {
-        str[i] = line[i];
-    }
-    polyline longitude(str);
-
-    coordinates result(generateValueFromPolyline(latitude),
-                       generateValueFromPolyline(longitude));
-
-    return result;
-}
-
-float route::generateValueFromPolyline(const polyline& line) const {
-    char bitmap[7];
-    bitmap[6] = 0;
-    for (int i = 0; i < 6; ++i) {
-        bitmap[i] = line[i];
-    }
-    for (int i = 0; i < 6; ++i) {
-        bitmap[i] -= 63;
-    }
-    for (int i = 0; i < 5; ++i) {
-        bitmap[i] -= 0x20;
-    }
-
-    int value = 0;
-    for (int i = 0; i < 6; ++i) {
-        value += bitmap[5 - i] * pow(32, i);
-    }
-
-    bool negative = false;
-    if (value % 2) {
-        value ^= 1;
-        negative = true;
-    }
-
-    value >>= 1;
-
-    if (negative) {
-        unsigned mask = pow(2, 31);
-        value |= mask;
-        value -= 1;
-        value ^= 1;
-    }
-
-    return value / 1e5;
 }
 
 float route::length() const {

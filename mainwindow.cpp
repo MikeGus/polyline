@@ -38,7 +38,7 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::on_addRouteButton_clicked() {
-    QString str = QInputDialog::getText(this, tr("Введите название"), tr("Название:"));
+    QString str = QInputDialog::getText(this, tr("Создание маршрута"), tr("Название:"));
     route newRoute(str, QDateTime::currentDateTime().toString());
 
     addRoute(newRoute);
@@ -168,4 +168,11 @@ void MainWindow::on_routeTableWidget_cellClicked(int row, int column) {
 void MainWindow::on_copyPolylineButton_clicked() {
     QClipboard *clipboard = QGuiApplication::clipboard();
     clipboard->setText(ui->polylineText->toPlainText());
+}
+
+void MainWindow::on_addRouteFromPolyButton_clicked() {
+    QString name = QInputDialog::getText(this, tr("Создание маршрута"), tr("Название:"));
+    QString poly = QInputDialog::getText(this, tr("Создание маршрута"), tr("Полилайн:"));
+    route newRoute(name, QDateTime::currentDateTime().toString(), polyline(poly.toStdString()));
+    addRoute(newRoute);
 }

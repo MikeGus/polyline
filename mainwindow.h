@@ -38,6 +38,8 @@ private slots:
 
     void on_copyPolylineButton_clicked();
 
+    void on_addRouteFromPolyButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     std::vector<route> routes;
