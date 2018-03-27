@@ -5,16 +5,19 @@
 #include <vector>
 #include "route.h"
 
+class MainWindow;
+
 class addroutecommand: public QUndoCommand {
 public:
-    addroutecommand(std::vector<route>* routes, route& newRoute,
+    addroutecommand(MainWindow* mainWindow, route& newRoute,
                     QUndoCommand* parent = nullptr);
 
     void redo() override;
     void undo() override;
 
 private:
-    std::vector<route>* routes;
+
+    MainWindow* mainWindow;
     route newRoute;
 };
 

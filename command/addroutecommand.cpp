@@ -1,14 +1,15 @@
 #include "addroutecommand.h"
+#include "mainwindow.h"
 
-addroutecommand::addroutecommand(std::vector<route>* routes, route& newRoute,
+addroutecommand::addroutecommand(MainWindow* mainWindow, route& newRoute,
                                  QUndoCommand* parent):
-    QUndoCommand(parent), routes(routes), newRoute(newRoute) {
+    QUndoCommand(parent), mainWindow(mainWindow), newRoute(newRoute) {
 }
 
 void addroutecommand::redo() {
-    routes->push_back(newRoute);
+    mainWindow->addRoute(newRoute);
 }
 
 void addroutecommand::undo() {
-    routes->pop_back();
+    mainWindow->removeRoute();
 }

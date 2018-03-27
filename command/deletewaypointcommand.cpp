@@ -1,15 +1,17 @@
 #include "deletewaypointcommand.h"
+#include "mainwindow.h"
 
-deletewaypointcommand::deletewaypointcommand(std::vector<coordinates>* route,
+deletewaypointcommand::deletewaypointcommand(MainWindow* mainWindow, size_t routeIndex,
                                           coordinates& delWaypoint, size_t position,
                                           QUndoCommand* parent):
-    QUndoCommand(parent), route(route), delWaypoint(delWaypoint), position(position) {
+    QUndoCommand(parent), mainWindow(mainWindow), routeIndex(routeIndex),
+    delWaypoint(delWaypoint), position(position) {
 }
 
 void deletewaypointcommand::redo() {
-    route->erase(route->begin() + position);
+    mainWindow->removeWaypoint(routeIndex, position);
 }
 
 void deletewaypointcommand::undo() {
-    route->insert(route->begin() + position, delWaypoint);
+    mainWindow->addWaypoint(routeIndex, delWaypoint, position);
 }

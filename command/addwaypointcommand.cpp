@@ -1,15 +1,17 @@
 #include "addwaypointcommand.h"
+#include "mainwindow.h"
 
-addwaypointcommand::addwaypointcommand(std::vector<coordinates>* route,
+addwaypointcommand::addwaypointcommand(MainWindow* mainWindow, size_t routeIndex,
                                        coordinates& newWaypoint,
                                        QUndoCommand* parent):
-    QUndoCommand(parent), route(route), newWaypoint(newWaypoint) {
+    QUndoCommand(parent), mainWindow(mainWindow), routeIndex(routeIndex),
+    newWaypoint(newWaypoint) {
 }
 
 void addwaypointcommand::redo() {
-    route->push_back(newWaypoint);
+    mainWindow->addWaypoint(routeIndex, newWaypoint);
 }
 
 void addwaypointcommand::undo() {
-    route->pop_back();
+    mainWindow->removeWaypoint(routeIndex);
 }

@@ -5,16 +5,18 @@
 #include <vector>
 #include "route.h"
 
+class MainWindow;
+
 class deleteroutecommand: public QUndoCommand {
 public:
-    deleteroutecommand(std::vector<route>* routes, route& delRoute, size_t position,
+    deleteroutecommand(MainWindow* mainWindow, route& delRoute, size_t position,
                     QUndoCommand* parent = nullptr);
 
     void redo() override;
     void undo() override;
 
 private:
-    std::vector<route>* routes;
+    MainWindow* mainWindow;
     route delRoute;
     size_t position;
 };

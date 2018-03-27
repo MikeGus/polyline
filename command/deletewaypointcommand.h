@@ -5,16 +5,20 @@
 #include <vector>
 #include "coordinates.h"
 
+class MainWindow;
+
 class deletewaypointcommand: public QUndoCommand {
 public:
-    deletewaypointcommand(std::vector<coordinates>* route, coordinates& delWaypoint, size_t position,
+    deletewaypointcommand(MainWindow* mainWindow, size_t routeIndex,
+                          coordinates& delWaypoint, size_t position,
                     QUndoCommand* parent = nullptr);
 
     void redo() override;
     void undo() override;
 
 private:
-    std::vector<coordinates>* route;
+    MainWindow* mainWindow;
+    size_t routeIndex;
     coordinates delWaypoint;
     size_t position;
 };

@@ -5,16 +5,19 @@
 #include <vector>
 #include "coordinates.h"
 
+class MainWindow;
+
 class addwaypointcommand: public QUndoCommand {
 public:
-    addwaypointcommand(std::vector<coordinates>* route, coordinates& newWaypoint,
+    addwaypointcommand(MainWindow* mainWindow, size_t routeIndex, coordinates& newWaypoint,
                     QUndoCommand* parent = nullptr);
 
     void redo() override;
     void undo() override;
 
 private:
-    std::vector<coordinates>* route;
+    MainWindow* mainWindow;
+    size_t routeIndex;
     coordinates newWaypoint;
 };
 
