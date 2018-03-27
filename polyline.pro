@@ -28,13 +28,23 @@ SOURCES += \
         mainwindow.cpp \
     coordinates.cpp \
     route.cpp \
-    polyline.cpp
+    polyline.cpp \
+    command/addroutecommand.cpp \
+    command/addwaypointcommand.cpp \
+    command/deleteroutecommand.cpp \
+    command/deletewaypointcommand.cpp \
+    command/editwaypointcommand.cpp
 
 HEADERS += \
         mainwindow.h \
     coordinates.h \
     route.h \
-    polyline.h
+    polyline.h \
+    command/addroutecommand.h \
+    command/addwaypointcommand.h \
+    command/deleteroutecommand.h \
+    command/deletewaypointcommand.h \
+    command/editwaypointcommand.h
 
 FORMS += \
         mainwindow.ui
