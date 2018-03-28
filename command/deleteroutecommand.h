@@ -2,21 +2,18 @@
 #define DELETEROUTECOMMAND_H
 
 #include <QUndoCommand>
-#include <vector>
-#include "route.h"
-
-class MainWindow;
+#include "routemanager.h"
 
 class deleteroutecommand: public QUndoCommand {
 public:
-    deleteroutecommand(MainWindow* mainWindow, route& delRoute, size_t position,
+    deleteroutecommand(routemanager* routes, route& delRoute, size_t position,
                     QUndoCommand* parent = nullptr);
 
     void redo() override;
     void undo() override;
 
 private:
-    MainWindow* mainWindow;
+    routemanager* routes;
     route delRoute;
     size_t position;
 };

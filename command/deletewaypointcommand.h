@@ -2,14 +2,11 @@
 #define DELETEWAYPOINTCOMMAND_H
 
 #include <QUndoCommand>
-#include <vector>
-#include "coordinates.h"
-
-class MainWindow;
+#include "routemanager.h"
 
 class deletewaypointcommand: public QUndoCommand {
 public:
-    deletewaypointcommand(MainWindow* mainWindow, size_t routeIndex,
+    deletewaypointcommand(routemanager* routes, size_t routeIndex,
                           coordinates& delWaypoint, size_t position,
                     QUndoCommand* parent = nullptr);
 
@@ -17,7 +14,7 @@ public:
     void undo() override;
 
 private:
-    MainWindow* mainWindow;
+    routemanager* routes;
     size_t routeIndex;
     coordinates delWaypoint;
     size_t position;

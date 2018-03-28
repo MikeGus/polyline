@@ -2,14 +2,11 @@
 #define EDITWAYPOINTCOMMAND_H
 
 #include <QUndoCommand>
-#include <vector>
-#include "coordinates.h"
-
-class MainWindow;
+#include "routemanager.h"
 
 class editwaypointcommand: public QUndoCommand {
 public:
-    editwaypointcommand(MainWindow* mainWindow, size_t routeIndex, coordinates& editWaypoint,
+    editwaypointcommand(routemanager* routes, size_t routeIndex, coordinates& editWaypoint,
                         coordinates& previousWaypoint, size_t position,
                         QUndoCommand* parent = nullptr);
 
@@ -17,7 +14,7 @@ public:
     void undo() override;
 
 private:
-    MainWindow* mainWindow;
+    routemanager* routes;
     size_t routeIndex;
     coordinates editWaypoint;
     coordinates previousWaypoint;

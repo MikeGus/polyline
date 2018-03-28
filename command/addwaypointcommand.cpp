@@ -1,17 +1,17 @@
 #include "addwaypointcommand.h"
-#include "mainwindow.h"
 
-addwaypointcommand::addwaypointcommand(MainWindow* mainWindow, size_t routeIndex,
+addwaypointcommand::addwaypointcommand(routemanager* routes, size_t routeIndex,
                                        coordinates& newWaypoint,
                                        QUndoCommand* parent):
-    QUndoCommand(parent), mainWindow(mainWindow), routeIndex(routeIndex),
+    QUndoCommand(parent), routes(routes), routeIndex(routeIndex),
     newWaypoint(newWaypoint) {
 }
 
 void addwaypointcommand::redo() {
-    mainWindow->addWaypoint(routeIndex, newWaypoint);
+    routes->addWaypoint(routeIndex, newWaypoint,
+                        routes->at(routeIndex).getNumberOfPoints());
 }
 
 void addwaypointcommand::undo() {
-    mainWindow->removeWaypoint(routeIndex);
+    routes->removeWaypoint(routeIndex, routes->at(routeIndex).getNumberOfPoints() - 1);
 }

@@ -2,22 +2,18 @@
 #define ADDROUTECOMMAND_H
 
 #include <QUndoCommand>
-#include <vector>
-#include "route.h"
-
-class MainWindow;
+#include "routemanager.h"
 
 class addroutecommand: public QUndoCommand {
 public:
-    addroutecommand(MainWindow* mainWindow, route& newRoute,
+    addroutecommand(routemanager* routes, route& newRoute,
                     QUndoCommand* parent = nullptr);
 
     void redo() override;
     void undo() override;
 
 private:
-
-    MainWindow* mainWindow;
+    routemanager* routes;
     route newRoute;
 };
 

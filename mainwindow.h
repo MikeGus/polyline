@@ -5,12 +5,9 @@
 #include <vector>
 #include <QTableWidget>
 #include <QUndoCommand>
-#include "route.h"
-
+#include "routemanager.h"
 
 const int columnCount = 3;
-const size_t lastPosition = -1;
-
 
 namespace Ui {
 class MainWindow;
@@ -23,18 +20,6 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-
-    void addRoute(route& newRoute, size_t position = lastPosition);
-
-    void addWaypoint(size_t routeIndex, coordinates& waypoint, size_t position = lastPosition);
-
-    void removeRoute(size_t position = lastPosition);
-
-    void removeWaypoint(size_t routeIndex, size_t position = lastPosition);
-
-    void editWaypoint(size_t routeIndex,coordinates& editWaypoint,
-                      size_t position);
-
 
 private slots:
     void on_addRouteButton_clicked();
@@ -55,12 +40,24 @@ private slots:
 
     void on_routeTableWidget_cellClicked(int row, int column);
 
+    void addRoute(route& newRoute, size_t position);
+
+    void addWaypoint(size_t routeIndex, coordinates& waypoint, size_t position);
+
+    void removeRoute(size_t position);
+
+    void removeWaypoint(size_t routeIndex, size_t position);
+
+    void editWaypoint(size_t routeIndex,coordinates& editWaypoint,
+                      size_t position);
+
 private:
     Ui::MainWindow *ui;
-    std::vector<route> routes;
+    routemanager* routes;
     QUndoStack* undoStack;
 
     void setupUndoStack();
+    void setupCommandSignals();
 
     void updateRouteStats(size_t selectedRow);
     void updateCurrentRoute(size_t selectedRow);

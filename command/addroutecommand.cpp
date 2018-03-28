@@ -1,15 +1,14 @@
 #include "addroutecommand.h"
-#include "mainwindow.h"
 
-addroutecommand::addroutecommand(MainWindow* mainWindow, route& newRoute,
+addroutecommand::addroutecommand(routemanager* routes, route& newRoute,
                                  QUndoCommand* parent):
-    QUndoCommand(parent), mainWindow(mainWindow), newRoute(newRoute) {
+    QUndoCommand(parent), routes(routes), newRoute(newRoute) {
 }
 
 void addroutecommand::redo() {
-    mainWindow->addRoute(newRoute);
+    routes->addRoute(newRoute, routes->size());
 }
 
 void addroutecommand::undo() {
-    mainWindow->removeRoute();
+    routes->removeRoute(routes->size() - 1);
 }

@@ -1,16 +1,15 @@
 #include "deleteroutecommand.h"
-#include "mainwindow.h"
 
-deleteroutecommand::deleteroutecommand(MainWindow* mainWindow, route& delRoute,
+deleteroutecommand::deleteroutecommand(routemanager* routes, route& delRoute,
                                        size_t position, QUndoCommand* parent):
-    QUndoCommand(parent), mainWindow(mainWindow), delRoute(delRoute),
+    QUndoCommand(parent), routes(routes), delRoute(delRoute),
     position(position) {
 }
 
 void deleteroutecommand::redo() {
-    mainWindow->removeRoute(position);
+    routes->removeRoute(position);
 }
 
 void deleteroutecommand::undo() {
-    mainWindow->addRoute(delRoute, position);
+    routes->addRoute(delRoute, position);
 }
