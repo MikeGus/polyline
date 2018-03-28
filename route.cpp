@@ -5,6 +5,12 @@
 #include <QFile>
 #include <QXmlStreamReader>
 
+static const double s_presision   = 100000.0;
+static const int    s_chunkSize   = 5;
+static const int    s_asciiOffset = 63;
+static const int    s_5bitMask    = 0x1f; // 0b11111 = 31
+static const int    s_6bitMask    = 0x20; // 0b100000 = 32
+
 route::route(const QString& name, const QString& date): name(name), date(date) {
 }
 
@@ -149,37 +155,32 @@ const polyline route::generatePolylineForWaypoint(const coordinates &waypoint) c
 }
 
 const polyline route::generatePolylineForValue(const float value) const {
+    int32_t e5 = std::round(value * s_presision); // (2)
+    e5 <<= 1;                                     // (4)
 
-    char result[6];
-
-    int val = value * 1e5 + 0.5;
-
-    bool isNeg = val < 0;
-    val <<= 1;
-
-    if (isNeg) {
-        val = ~val;
+    if (value < 0) {
+        e5 = ~e5;                                 // (5)
     }
 
-    unsigned count = 0;
+    bool hasNextChunk = false;
+    std::string result;
 
+    // Split the value into 5-bit chunks and convert each of them to integer
     do {
-      result[count] = val & 0x1f;
-      val >>= 5;
+        int32_t nextChunk = (e5 >> s_chunkSize); // (6), (7) - start from the left 5 bits.
+        hasNextChunk = nextChunk > 0;
 
-      if (val) {
-          result[count] |= 0x20;
-      }
+        int charVar = e5 & s_5bitMask;           // 5-bit mask (0b11111 == 31). Extract the left 5 bits.
+        if (hasNextChunk) {
+            charVar |= s_6bitMask;               // (8)
+        }
+        charVar += s_asciiOffset;                // (10)
+        result += (char)charVar;                 // (11)
 
-      result[count] += 63;
+        e5 = nextChunk;
+    } while (hasNextChunk);
 
-      ++count;
-    } while (val);
-
-    result[count] = 0;
-    polyline resPoly = polyline(result);
-
-    return resPoly;
+    return polyline(result);
 }
 
 float route::length() const {
