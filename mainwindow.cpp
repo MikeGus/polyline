@@ -72,6 +72,9 @@ void MainWindow::setupCommandSignals() {
 
 void MainWindow::on_addRouteButton_clicked() {
     QString str = QInputDialog::getText(this, tr("Создание маршрута"), tr("Название:"));
+    if (str.length() == 0) {
+        return;
+    }
     route newRoute(str, QDateTime::currentDateTime().toString());
     undoStack->push(new addroutecommand(routes, newRoute));
 }
@@ -151,6 +154,9 @@ void MainWindow::on_copyPolylineButton_clicked() {
 
 void MainWindow::on_addRouteFromPolyButton_clicked() {
     QString name = QInputDialog::getText(this, tr("Создание маршрута"), tr("Название:"));
+    if (name.length() == 0) {
+        return;
+    }
     QString poly = QInputDialog::getText(this, tr("Создание маршрута"), tr("Полилайн:"));
     route newRoute(name, QDateTime::currentDateTime().toString(), polyline(poly.toStdString()));
 
@@ -159,6 +165,8 @@ void MainWindow::on_addRouteFromPolyButton_clicked() {
 
 void MainWindow::updateCurrentRoute(size_t selectedRow) {
 
+    ui->routeTableWidget->clearSelection();
+    ui->routeTableWidget->selectRow(selectedRow);
     ui->polylineText->setText(QString::fromStdString(routes->at(selectedRow).generatePolyline().get()));
 
     ui->pointTableWidget->clearContents();
@@ -192,19 +200,20 @@ void MainWindow::addRoute(route& newRoute, size_t position) {
     ui->routeTableWidget->setItem(position, 1, routeLength);
     ui->routeTableWidget->setItem(position, 2, routeDate);
 
-    ui->routeTableWidget->selectRow(position);
-
     updateCurrentRoute(position);
 }
 
 void MainWindow::removeRoute(size_t position) {
+    if (position == getSelectedRow(ui->routeTableWidget)) {
+        ui->pointTableWidget->clearContents();
+        ui->pointTableWidget->setRowCount(0);
+        ui->polylineText->clear();
+    }
     ui->routeTableWidget->removeRow(position);
-    ui->pointTableWidget->clearContents();
-    ui->pointTableWidget->setRowCount(0);
 }
 
 void MainWindow::addWaypoint(size_t routeIndex, coordinates& waypoint, size_t position) {
-    ui->routeTableWidget->selectRow(routeIndex);
+    updateCurrentRoute(routeIndex);
     updateRouteStats(routeIndex);
 
     ui->pointTableWidget->insertRow(position);
@@ -215,12 +224,14 @@ void MainWindow::addWaypoint(size_t routeIndex, coordinates& waypoint, size_t po
 }
 
 void MainWindow::removeWaypoint(size_t routeIndex, size_t position) {
+    updateCurrentRoute(routeIndex);
     updateRouteStats(routeIndex);
     ui->pointTableWidget->removeRow(position);
 }
 
 void MainWindow::editWaypoint(size_t routeIndex, coordinates& editWaypoint,
                               size_t position) {
+    updateCurrentRoute(routeIndex);
     updateRouteStats(routeIndex);
 
     ui->pointTableWidget->setItem(position, 0,
@@ -230,6 +241,10 @@ void MainWindow::editWaypoint(size_t routeIndex, coordinates& editWaypoint,
 }
 
 size_t MainWindow::getSelectedRow(const QTableWidget* table) const {
+    if (table->selectedItems().empty()) {
+        return -1;
+    }
+
     return table->selectedItems().first()->row();
 }
 

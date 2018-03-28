@@ -31,10 +31,10 @@ SOURCES += \
     polyline.cpp \
     command/addroutecommand.cpp \
     command/addwaypointcommand.cpp \
-    command/deleteroutecommand.cpp \
     command/deletewaypointcommand.cpp \
     command/editwaypointcommand.cpp \
-    routemanager.cpp
+    routemanager.cpp \
+    command/deleteroutecommand.cpp
 
 HEADERS += \
         mainwindow.h \
