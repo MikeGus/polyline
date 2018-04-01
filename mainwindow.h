@@ -6,6 +6,7 @@
 #include <QTableWidget>
 #include <QUndoCommand>
 #include "routemanager.h"
+#include "presenter.h"
 
 const int columnCount = 3;
 
@@ -20,6 +21,22 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
+signals:
+    void addSampleRouteSignal(QString& name);
+
+    void addRouteFromPolylineSignal(QString& name, QString& poly);
+
+    void addRouteFromFileSignal(QString& filename);
+
+    void removeRouteSignal(size_t position);
+
+    void addWaypointSignal(size_t selectedRoute, coordinates& newPoint);
+
+    void editWaypointSignal(size_t selectedRoute, size_t selectedPoint,
+                      coordinates& newPoint);
+
+    void removeWaypointSignal(size_t selectedRoute, size_t selectedPoint);
 
 private slots:
     void on_addRouteButton_clicked();
@@ -51,10 +68,13 @@ private slots:
     void editWaypoint(size_t routeIndex,coordinates& editWaypoint,
                       size_t position);
 
+    void displayError(const char* msg);
+
 private:
     Ui::MainWindow *ui;
     routemanager* routes;
     QUndoStack* undoStack;
+    presenter* mediator;
 
     void setupUndoStack();
     void setupCommandSignals();

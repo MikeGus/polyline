@@ -47,6 +47,10 @@ route::route(const QString &name, const QString &date, const polyline& poly):
         float dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
         lng += dlng;
 
+        if (fabs(lat) > 90 || fabs(lng) > 180) {
+            throw std::logic_error("Некорректные координаты");
+        }
+
         coordinates point(lat * 1e-5, lng * 1e-5);
         waypoints.push_back(point);
     }
@@ -76,6 +80,11 @@ void route::readFromFile(const QString& filename) {
                                 if (reader.name().toString() == "trkpt") {
                                     double lat = reader.attributes().value("lat").toDouble();
                                     double lon = reader.attributes().value("lon").toDouble();
+
+                                    if (fabs(lat) > 90 || fabs(lon) > 180) {
+                                        throw std::logic_error("Некорректные координаты");
+                                    }
+
                                     coordinates newCoordinate(lat, lon);
                                     waypoints.push_back(newCoordinate);
                                 }

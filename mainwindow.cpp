@@ -9,13 +9,8 @@
 #include <QDateTime>
 #include <QClipboard>
 #include <QAction>
+#include <QMessageBox>
 #include "coordinates.h"
-
-#include "command/addroutecommand.h"
-#include "command/addwaypointcommand.h"
-#include "command/deleteroutecommand.h"
-#include "command/deletewaypointcommand.h"
-#include "command/editwaypointcommand.h"
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -41,10 +36,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     routes = new routemanager(this);
     setupUndoStack();
+    mediator = new presenter(undoStack, routes, this);
+
     setupCommandSignals();
  }
 
 MainWindow::~MainWindow() {
+    delete mediator;
+    delete undoStack;
     delete routes;
     delete ui;
 }
@@ -68,77 +67,62 @@ void MainWindow::setupCommandSignals() {
     connect(routes, SIGNAL(waypointAdded(size_t,coordinates&,size_t)), this, SLOT(addWaypoint(size_t,coordinates&,size_t)));
     connect(routes, SIGNAL(waypointRemoved(size_t,size_t)), this, SLOT(removeWaypoint(size_t,size_t)));
     connect(routes, SIGNAL(waypointEdited(size_t,coordinates&,size_t)), this, SLOT(editWaypoint(size_t,coordinates&,size_t)));
+
+    connect(this, SIGNAL(addRouteFromFileSignal(QString&)), mediator, SLOT(addRouteFromFile(QString&)));
+    connect(this, SIGNAL(addRouteFromPolylineSignal(QString&,QString&)), mediator, SLOT(addRouteFromPolyline(QString&,QString&)));
+    connect(this, SIGNAL(addSampleRouteSignal(QString&)), mediator, SLOT(addSampleRoute(QString&)));
+    connect(this, SIGNAL(addWaypointSignal(size_t,coordinates&)), mediator, SLOT(addWaypoint(size_t,coordinates&)));
+    connect(this, SIGNAL(editWaypointSignal(size_t,size_t,coordinates&)), mediator, SLOT(editWaypoint(size_t,size_t,coordinates&)));
+    connect(this, SIGNAL(removeRouteSignal(size_t)), mediator, SLOT(removeRoute(size_t)));
+    connect(this, SIGNAL(removeWaypointSignal(size_t,size_t)), mediator, SLOT(removeWaypoint(size_t,size_t)));
+
+    connect(mediator, SIGNAL(displayError(const char*)), this, SLOT(displayError(const char*)));
 }
 
 void MainWindow::on_addRouteButton_clicked() {
-    QString str = QInputDialog::getText(this, tr("Создание маршрута"), tr("Название:"));
-    if (str.length() == 0) {
-        return;
+    bool isOk;
+    QLineEdit::EchoMode echo = QLineEdit::Normal;
+    QString text;
+
+    QString str = QInputDialog::getText(this, tr("Создание маршрута"), tr("Название:"),
+                                        echo, text, &isOk);
+    if (isOk) {
+        emit addSampleRouteSignal(str);
     }
-    route newRoute(str, QDateTime::currentDateTime().toString());
-    undoStack->push(new addroutecommand(routes, newRoute));
 }
 
 void MainWindow::on_deleteRouteButton_clicked() {
-    if (ui->routeTableWidget->selectedItems().empty()) {
-        return;
-    }
-
-    int deletedRow = ui->routeTableWidget->selectedItems().first()->row();
-    undoStack->push(new deleteroutecommand(routes, routes->at(deletedRow), deletedRow));
+    emit removeRouteSignal(getSelectedRow(ui->routeTableWidget));
 }
 
 void MainWindow::on_createWaypointButton_clicked() {
-    if (ui->routeTableWidget->selectedItems().empty()) {
-        return;
-    }
-
     int selectedRow = getSelectedRow(ui->routeTableWidget);
     coordinates waypoint(ui->latitudeDoubleSpinBox->value(), ui->longitudeDoubleSpinBox->value());
 
-    undoStack->push(new addwaypointcommand(routes, selectedRow, waypoint));
+    emit addWaypointSignal(selectedRow, waypoint);
 }
 
 void MainWindow::on_deleteWaypointButton_clicked() {
-    if (ui->pointTableWidget->selectedItems().empty()
-            || ui->routeTableWidget->selectedItems().empty()) {
-        return;
-    }
-
     size_t selectedRoute = getSelectedRow(ui->routeTableWidget);
     size_t selectedPoint = getSelectedRow(ui->pointTableWidget);
 
-    undoStack->push(new deletewaypointcommand(routes, selectedRoute,
-                                              routes->at(selectedRoute)[selectedPoint],
-                                              selectedPoint));
+    emit removeWaypointSignal(selectedRoute, selectedPoint);
 }
 
 void MainWindow::on_changeWaypointButton_clicked() {
-    if (ui->pointTableWidget->selectedItems().empty()
-            || ui->routeTableWidget->selectedItems().empty()) {
-        return;
-    }
-
     size_t selectedRoute = getSelectedRow(ui->routeTableWidget);
     size_t selectedPoint = getSelectedRow(ui->pointTableWidget);
 
     coordinates newCoordinates = coordinates(ui->latitudeDoubleSpinBox->value(),
                                              ui->longitudeDoubleSpinBox->value());
 
-    undoStack->push(new editwaypointcommand(routes, selectedRoute, newCoordinates,
-                                            routes->at(selectedRoute)[selectedPoint],
-                                            selectedPoint));
+    emit editWaypointSignal(selectedRoute, selectedPoint, newCoordinates);
 }
 
 void MainWindow::on_openRouteButton_clicked() {
     QStringList files = QFileDialog::getOpenFileNames(this, tr("Выберите файлы"), QDir::homePath(), tr("GPX files (*.gpx)"));
     for (auto file : files) {
-        QFileInfo fileInfo(file);
-        route newRoute(file, fileInfo.metadataChangeTime().toString());
-
-        newRoute.readFromFile(file);
-
-        undoStack->push(new addroutecommand(routes, newRoute));
+        emit addRouteFromFileSignal(file);
     }
 }
 
@@ -153,14 +137,20 @@ void MainWindow::on_copyPolylineButton_clicked() {
 }
 
 void MainWindow::on_addRouteFromPolyButton_clicked() {
-    QString name = QInputDialog::getText(this, tr("Создание маршрута"), tr("Название:"));
-    if (name.length() == 0) {
+    bool isOk;
+    QLineEdit::EchoMode echo = QLineEdit::Normal;
+    QString text;
+
+    QString name = QInputDialog::getText(this, tr("Создание маршрута"), tr("Название:"),
+                                         echo, text, &isOk);
+    if (!isOk) {
         return;
     }
-    QString poly = QInputDialog::getText(this, tr("Создание маршрута"), tr("Полилайн:"));
-    route newRoute(name, QDateTime::currentDateTime().toString(), polyline(poly.toStdString()));
-
-    undoStack->push(new addroutecommand(routes, newRoute));
+    QString poly = QInputDialog::getText(this, tr("Создание маршрута"), tr("Полилайн:"),
+                                         echo, text, &isOk);
+    if (isOk) {
+        emit addRouteFromPolylineSignal(name, poly);
+    }
 }
 
 void MainWindow::updateCurrentRoute(size_t selectedRow) {
@@ -213,8 +203,12 @@ void MainWindow::removeRoute(size_t position) {
 }
 
 void MainWindow::addWaypoint(size_t routeIndex, coordinates& waypoint, size_t position) {
-    updateCurrentRoute(routeIndex);
+
     updateRouteStats(routeIndex);
+
+    if (routeIndex != getSelectedRow(ui->routeTableWidget)) {
+        updateCurrentRoute(routeIndex);
+    }
 
     ui->pointTableWidget->insertRow(position);
     ui->pointTableWidget->setItem(position, 0,
@@ -224,9 +218,13 @@ void MainWindow::addWaypoint(size_t routeIndex, coordinates& waypoint, size_t po
 }
 
 void MainWindow::removeWaypoint(size_t routeIndex, size_t position) {
-    updateCurrentRoute(routeIndex);
     updateRouteStats(routeIndex);
-    ui->pointTableWidget->removeRow(position);
+
+    if (routeIndex != getSelectedRow(ui->routeTableWidget)) {
+        updateCurrentRoute(routeIndex);
+    } else {
+        ui->pointTableWidget->removeRow(position);
+    }
 }
 
 void MainWindow::editWaypoint(size_t routeIndex, coordinates& editWaypoint,
@@ -248,3 +246,6 @@ size_t MainWindow::getSelectedRow(const QTableWidget* table) const {
     return table->selectedItems().first()->row();
 }
 
+void MainWindow::displayError(const char* msg) {
+    QMessageBox::critical(this, tr("Ошибка"), tr(msg));
+}
