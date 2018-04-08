@@ -2,7 +2,7 @@
 #define DELETEROUTECOMMAND_H
 
 #include <QUndoCommand>
-#include "routemanager.h"
+#include "../routemanager.h"
 
 class deleteroutecommand: public QUndoCommand {
 public:

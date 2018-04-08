@@ -35,3 +35,7 @@ polyline& polyline::append(const polyline& other) {
 unsigned polyline::length() const {
     return data.length();
 }
+
+bool polyline::operator ==(const polyline& other) const {
+    return data == other.data;
+}

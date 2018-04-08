@@ -3,7 +3,7 @@
 
 #include <QUndoCommand>
 #include <vector>
-#include "routemanager.h"
+#include "../routemanager.h"
 
 class addwaypointcommand: public QUndoCommand {
 public:

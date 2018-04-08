@@ -20,6 +20,8 @@ public:
 
     float distance(const coordinates& other) const;
 
+    bool operator ==(const coordinates& other) const;
+
 private:
     float latitude;
     float longitude;

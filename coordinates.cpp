@@ -22,21 +22,16 @@ void coordinates::setLongitude(const float longitude) {
 }
 
 const coordinates coordinates::operator -(const coordinates& other) const {
-    coordinates result(latitude - other.latitude, longitude - other.longitude);
-    if (result.latitude < - 90) {
-        result.latitude += 180;
-    } else if (result.latitude > 90) {
-        result.latitude -= 180;
-    } else if (result.longitude < - 180) {
-        result.longitude += 360;
-    } else if (result.longitude > 180) {
-        result.longitude -= 360;
-    }
+    double newLatitude((round(latitude * 1e5) - round(other.latitude * 1e5)) / 1e5);
+    double newLongitude((round(longitude * 1e5) - round(other.longitude * 1e5)) / 1e5);
+    coordinates result(newLatitude, newLongitude);
     return result;
 }
 
 const coordinates coordinates::operator +(const coordinates& other) const {
-    coordinates result(latitude + other.latitude, longitude + other.longitude);
+    double newLatitude((round(latitude * 1e5) + round(other.latitude * 1e5)) / 1e5);
+    double newLongitude((round(longitude * 1e5) + round(other.longitude * 1e5)) / 1e5);
+    coordinates result(newLatitude, newLongitude);
     return result;
 }
 
@@ -55,4 +50,8 @@ float coordinates::distance(const coordinates& other) const {
     float c = 2 * atan2(sqrt(a), sqrt(1-a));
 
     return R * c;
+}
+
+bool coordinates::operator ==(const coordinates& other) const {
+    return latitude == other.latitude && longitude == other.longitude;
 }

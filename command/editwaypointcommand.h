@@ -2,7 +2,7 @@
 #define EDITWAYPOINTCOMMAND_H
 
 #include <QUndoCommand>
-#include "routemanager.h"
+#include "../routemanager.h"
 
 class editwaypointcommand: public QUndoCommand {
 public:

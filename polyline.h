@@ -26,6 +26,8 @@ public:
 
     unsigned length() const;
 
+    bool operator ==(const polyline& other) const;
+
 private:
     std::string data;
 };

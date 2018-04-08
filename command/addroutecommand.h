@@ -2,7 +2,7 @@
 #define ADDROUTECOMMAND_H
 
 #include <QUndoCommand>
-#include "routemanager.h"
+#include "../routemanager.h"
 
 class addroutecommand: public QUndoCommand {
 public:

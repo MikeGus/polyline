@@ -4,13 +4,17 @@ routemanager::routemanager(QObject *parent) : QObject(parent) {
 }
 
 void routemanager::addRoute(route& newRoute, size_t position) {
-    routes.insert(routes.begin() + position, newRoute);
-    emit routeAdded(newRoute, position);
+    if (routes.size() >= position) {
+        routes.insert(routes.begin() + position, newRoute);
+        emit routeAdded(newRoute, position);
+    }
 }
 
 void routemanager::removeRoute(size_t position) {
-    routes.erase(routes.begin() + position);
-    emit routeRemoved(position);
+    if (routes.size() > position) {
+        routes.erase(routes.begin() + position);
+        emit routeRemoved(position);
+    }
 }
 
 void routemanager::addWaypoint(size_t routeIndex, coordinates& newWaypoint,

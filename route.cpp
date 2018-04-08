@@ -16,44 +16,22 @@ route::route(const QString& name, const QString& date): name(name), date(date) {
 
 route::route(const QString &name, const QString &date, const polyline& poly):
     name(name), date(date) {
-    waypoints.clear();
 
-    int len = poly.length();
-    int index = 0;
+    size_t i = 0;
+    std::string coords = poly.get();
 
-    float lat = 0;
-    float lng = 0;
+    while (i < coords.size())
+    {
+        auto lat = decodePolylineForValue(coords, i);
+        auto lon = decodePolylineForValue(coords, i);
 
-    while (index < len) {
-        char b;
-        int shift = 0;
-        int result = 0;
-        do {
-            b = poly[index++] - 63;
-            result |= (b & 0x1f) << shift;
-            shift += 5;
-        } while (b >= 0x20);
-        float dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
-        lat += dlat;
-
-        shift = 0;
-        result = 0;
-        do {
-            b = poly[index++] - 63;
-            result |= (b & 0x1f) << shift;
-            shift += 5;
-        } while (b >= 0x20);
-
-        float dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
-        lng += dlng;
-
-        if (fabs(lat) > 90 || fabs(lng) > 180) {
-            throw std::logic_error("Некорректные координаты");
+        if (!waypoints.empty()) {
+            const auto &prevPoint = waypoints.back();
+            lat += prevPoint.getLatitude();
+            lon += prevPoint.getLongitude();
         }
-
-        coordinates point(lat * 1e-5, lng * 1e-5);
-        waypoints.push_back(point);
-    }
+       waypoints.emplace_back(coordinates(round(lat * 1e5) / 1e5, round(lon * 1e5) / 1e5));
+    };
 }
 
 void route::readFromFile(const QString& filename) {
@@ -62,48 +40,34 @@ void route::readFromFile(const QString& filename) {
         return;
     }
 
-    QXmlStreamReader reader(&file);
-    if (reader.readNextStartElement()) {
-        while (reader.readNextStartElement()) {
-            if (reader.name() == "trk") {
-                while (reader.readNextStartElement()) {
-                    if (reader.name() == "name") {
-                        name = reader.readElementText();
-                    } else if (reader.name() == "desc") {
-                        QString len = reader.readElementText();
-                        len.truncate(len.indexOf(" "));
-                    }
-                    else if (reader.name() == "trkseg") {
-                        while (!reader.isEndDocument()) {
-                            reader.readNext();
-                            if (reader.isStartElement()) {
-                                if (reader.name().toString() == "trkpt") {
-                                    double lat = reader.attributes().value("lat").toDouble();
-                                    double lon = reader.attributes().value("lon").toDouble();
-
-                                    if (fabs(lat) > 90 || fabs(lon) > 180) {
-                                        throw std::logic_error("Некорректные координаты");
-                                    }
-
-                                    coordinates newCoordinate(lat, lon);
-                                    waypoints.push_back(newCoordinate);
-                                }
-                            }
-                            else {
-                                reader.readNext();
-                            }
-                        }
-                    }
-                    else {
-                        reader.skipCurrentElement();
-                    }
-                }
+    QXmlStreamReader reader(file.readAll());
+    while (!reader.atEnd() && !reader.hasError()) {
+        auto token = reader.readNext();
+        if (token == QXmlStreamReader::StartElement) {
+            if (reader.name() == "name") {
+                name = reader.readElementText();
             }
-            else {
-                reader.skipCurrentElement();
+            if (reader.name() == "trkpt") {
+               QXmlStreamAttributes attrib = reader.attributes();
+               bool bOk = false;
+               double longitude = attrib.value("lon").toDouble(&bOk);
+               if (!bOk) {
+                   throw std::invalid_argument("Долгота отсутствует");
+               }
+               if (fabs(longitude) > 180) {
+                   throw std::invalid_argument("Долгота имеет некорректное значение");
+               }
+               double latitude = attrib.value("lat").toDouble(&bOk);
+               if (!bOk) {
+                   throw std::invalid_argument("Широта отсутствует");
+               }
+               if (fabs(latitude) > 90) {
+                   throw std::invalid_argument("Широта имеет некорректное значение");
+               }
+               waypoints.push_back(coordinates(latitude, longitude));
             }
         }
-    }
+   }
 }
 
 coordinates& route::operator [](const int position) {
@@ -165,10 +129,11 @@ const polyline route::generatePolylineForWaypoint(const coordinates &waypoint) c
 
 const polyline route::generatePolylineForValue(const float value) const {
     int32_t e5 = std::round(value * s_presision); // (2)
+
     e5 <<= 1;                                     // (4)
 
     if (value < 0) {
-        e5 = ~e5;                                 // (5)
+     e5 = ~e5;                                 // (5)
     }
 
     bool hasNextChunk = false;
@@ -181,7 +146,7 @@ const polyline route::generatePolylineForValue(const float value) const {
 
         int charVar = e5 & s_5bitMask;           // 5-bit mask (0b11111 == 31). Extract the left 5 bits.
         if (hasNextChunk) {
-            charVar |= s_6bitMask;               // (8)
+         charVar |= s_6bitMask;               // (8)
         }
         charVar += s_asciiOffset;                // (10)
         result += (char)charVar;                 // (11)
@@ -190,6 +155,26 @@ const polyline route::generatePolylineForValue(const float value) const {
     } while (hasNextChunk);
 
     return polyline(result);
+}
+
+double route::decodePolylineForValue(const std::string& coords, size_t& i) const {
+    int32_t result = 0;
+    int shift = 0;
+    char c = 0;
+    do {
+        c = coords.at(i++);
+        c -= s_asciiOffset;      // (10)
+        result |= (c & s_5bitMask) << shift;
+        shift += s_chunkSize;    // (7)
+    } while (c >= s_6bitMask);
+
+    if (result & 1) {
+        result = ~result;        // (5)
+    }
+    result >>= 1;                // (4)
+
+    // Convert to decimal value.
+    return result / s_presision; // (2)
 }
 
 float route::length() const {
@@ -224,4 +209,8 @@ QString route::getDate() const {
 
 size_t route::getNumberOfPoints() const {
     return waypoints.size();
+}
+
+bool route::operator ==(const route& other) const {
+    return waypoints == other.waypoints;
 }

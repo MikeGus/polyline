@@ -172,7 +172,7 @@ void MainWindow::updateCurrentRoute(size_t selectedRow) {
 }
 
 void MainWindow::updateRouteStats(size_t selectedRow) {
-    ui->routeTableWidget->setItem(selectedRow, 1, new QTableWidgetItem(QString::number(routes->at(selectedRow).length(), 'f', 3)));
+    ui->routeTableWidget->setItem(selectedRow, 1, new QTableWidgetItem(QString::number(routes->at(selectedRow).length(), 'f', 1)));
     ui->routeTableWidget->setItem(selectedRow, 2, new QTableWidgetItem(QDateTime::currentDateTime().toString()));
 
     if (selectedRow == getSelectedRow(ui->routeTableWidget)) {
@@ -182,7 +182,7 @@ void MainWindow::updateRouteStats(size_t selectedRow) {
 
 void MainWindow::addRoute(route& newRoute, size_t position) {
     QTableWidgetItem* routeName = new QTableWidgetItem(newRoute.getName());
-    QTableWidgetItem* routeLength = new QTableWidgetItem(QString::number(newRoute.length(), 'f', 3));
+    QTableWidgetItem* routeLength = new QTableWidgetItem(QString::number(newRoute.length(), 'f', 1));
     QTableWidgetItem* routeDate = new QTableWidgetItem(newRoute.getDate());
 
     ui->routeTableWidget->insertRow(position);

@@ -44,10 +44,14 @@ public:
 
     float length() const;
 
+    bool operator ==(const route& other) const;
+
 private:
     const polyline generatePolylineForWaypoint(const coordinates& waypoint) const;
 
     const polyline generatePolylineForValue(const float value) const;
+
+    double decodePolylineForValue(const std::string& value, size_t& i) const;
 
     QString name;
     QString date;

@@ -33,7 +33,7 @@ void presenter::addRouteFromPolyline(QString& name, QString& poly) {
         route newRoute(name, QDateTime::currentDateTime().toString(), routePolyline);
         undoStack->push(new addroutecommand(routeManager, newRoute));
     } catch(std::logic_error& er) {
-        emit displayError(er.what());
+        emit displayError("Некорректный полилайн");
     }
 }
 
@@ -42,9 +42,8 @@ void presenter::addRouteFromFile(QString& filename) {
         QFileInfo fileInfo(filename);
         route newRoute(filename, fileInfo.metadataChangeTime().toString());
         newRoute.readFromFile(filename);
-
         undoStack->push(new addroutecommand(routeManager, newRoute));
-    } catch(std::logic_error& er) {
+    } catch(std::invalid_argument& er) {
         emit displayError(er.what());
     }
 }
