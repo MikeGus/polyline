@@ -1,6 +1,8 @@
 #include "presenter.h"
 #include <QDateTime>
 #include <QFileInfo>
+#include <QXmlStreamReader>
+#include <QXmlStreamWriter>
 
 #include "polyline.h"
 #include "command/addroutecommand.h"
@@ -99,4 +101,98 @@ void presenter::removeWaypoint(size_t selectedRoute, size_t selectedPoint) {
     }
     undoStack->push(new deletewaypointcommand(routeManager, selectedRoute, routeManager->at(selectedRoute)[selectedPoint],
                                               selectedPoint));
+}
+
+void presenter::saveState() {
+    QString filename("saved_state.xml");
+    QFile backup(filename);
+
+    backup.open(QIODevice::WriteOnly);
+
+    QXmlStreamWriter writer(&backup);
+    writer.setAutoFormatting(true);
+
+    writer.writeStartDocument();
+
+    writer.writeStartElement("routes");
+    for (size_t i = 0; i < routeManager->size(); ++i) {
+        writer.writeStartElement("route");
+
+        writer.writeStartElement("name");
+        writer.writeCharacters(routeManager->at(i).getName());
+        writer.writeEndElement();
+
+        writer.writeStartElement("date");
+        writer.writeCharacters(routeManager->at(i).getDate());
+        writer.writeEndElement();
+
+        writer.writeStartElement("waypoints");
+        for (size_t j = 0; j < routeManager->at(i).getNumberOfPoints(); ++j) {
+            writer.writeStartElement("waypoint");
+
+            QXmlStreamAttributes attr;
+            attr.append("latitude", QString::number(routeManager->at(i)[j].getLatitude()));
+            attr.append("longitude", QString::number(routeManager->at(i)[j].getLongitude()));
+            writer.writeAttributes(attr);
+
+            writer.writeEndElement();
+        }
+        writer.writeEndElement();
+
+        writer.writeEndElement();
+    }
+    writer.writeEndElement();
+
+    writer.writeEndDocument();
+}
+
+
+void presenter::loadState() {
+    QString filename("saved_state.xml");
+    QFile backup(filename);
+
+    if (!backup.open(QIODevice::ReadOnly | QFile::Text)) {
+        return;
+    }
+
+    QXmlStreamReader reader(&backup);
+
+    if (reader.readNextStartElement()) {
+        if (reader.name() == "routes") {
+            while (reader.readNextStartElement()) {
+                if (reader.name() == "route") {
+                    route newRoute;
+                    while (reader.readNextStartElement()) {
+                        if (reader.name() == "name") {
+                            newRoute.setName(reader.readElementText());
+                        } else if (reader.name() == "date") {
+                            newRoute.setDate(reader.readElementText());
+                        } else if (reader.name() == "waypoints") {
+                            while (reader.readNextStartElement()) {
+                                if (reader.name() == "waypoint") {
+                                    QXmlStreamAttributes attr = reader.attributes();
+                                    coordinates waypoint;
+
+                                    waypoint.setLatitude(attr.value("latitude").toDouble());
+                                    waypoint.setLongitude(attr.value("longitude").toDouble());
+
+                                    newRoute.addLast(waypoint);
+                                    reader.skipCurrentElement();
+                                } else {
+                                    reader.skipCurrentElement();
+                                }
+                            }
+                        } else {
+                            reader.skipCurrentElement();
+                        }
+                    }
+                    undoStack->push(new addroutecommand(routeManager, newRoute));
+                } else {
+                    reader.skipCurrentElement();
+                }
+            }
+        } else {
+            reader.skipCurrentElement();
+        }
+    }
 }

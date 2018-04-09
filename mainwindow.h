@@ -38,6 +38,10 @@ signals:
 
     void removeWaypointSignal(size_t selectedRoute, size_t selectedPoint);
 
+    void saveStateSignal();
+
+    void loadStateSignal();
+
 private slots:
     void on_addRouteButton_clicked();
 
@@ -70,6 +74,8 @@ private slots:
 
     void displayError(const char* msg);
 
+    void closeEvent(QCloseEvent* event);
+
 private:
     Ui::MainWindow *ui;
     routemanager* routes;
@@ -77,12 +83,18 @@ private:
     presenter* mediator;
 
     void setupUndoStack();
+
     void setupCommandSignals();
 
     void updateRouteStats(size_t selectedRow);
+
     void updateCurrentRoute(size_t selectedRow);
 
     size_t getSelectedRow(const QTableWidget* table) const;
+
+    void saveState();
+
+    void loadState();
 };
 
 #endif // MAINWINDOW_H

@@ -10,6 +10,9 @@
 #include <QClipboard>
 #include <QAction>
 #include <QMessageBox>
+#include <QXmlStreamWriter>
+#include <QXmlStreamReader>
+#include <QCloseEvent>
 #include "coordinates.h"
 
 
@@ -39,6 +42,7 @@ MainWindow::MainWindow(QWidget *parent) :
     mediator = new presenter(undoStack, routes, this);
 
     setupCommandSignals();
+    loadState();
  }
 
 MainWindow::~MainWindow() {
@@ -77,6 +81,9 @@ void MainWindow::setupCommandSignals() {
     connect(this, SIGNAL(removeWaypointSignal(size_t,size_t)), mediator, SLOT(removeWaypoint(size_t,size_t)));
 
     connect(mediator, SIGNAL(displayError(const char*)), this, SLOT(displayError(const char*)));
+
+    connect(this, SIGNAL(saveStateSignal()), mediator, SLOT(saveState()));
+    connect(this, SIGNAL(loadStateSignal()), mediator, SLOT(loadState()));
 }
 
 void MainWindow::on_addRouteButton_clicked() {
@@ -248,4 +255,26 @@ size_t MainWindow::getSelectedRow(const QTableWidget* table) const {
 
 void MainWindow::displayError(const char* msg) {
     QMessageBox::critical(this, tr("Ошибка"), tr(msg));
+}
+
+void MainWindow::closeEvent(QCloseEvent *event) {
+    QMessageBox::StandardButton resBtn = QMessageBox::question( this, tr("Выход"),
+                                                                tr("Вы уверены?\n"),
+                                                                QMessageBox::Yes
+                                                                | QMessageBox::No,
+                                                                QMessageBox::Yes);
+     if (resBtn != QMessageBox::Yes) {
+         event->ignore();
+     } else {
+         event->accept();
+         saveState();
+     }
+}
+
+void MainWindow::saveState() {
+    emit saveStateSignal();
+}
+
+void MainWindow::loadState() {
+    emit loadStateSignal();
 }

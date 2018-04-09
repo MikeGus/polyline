@@ -30,6 +30,10 @@ public slots:
 
     void removeWaypoint(size_t selectedRoute, size_t selectedPoint);
 
+    void saveState();
+
+    void loadState();
+
 private:
     QUndoStack* undoStack;
     routemanager* routeManager;

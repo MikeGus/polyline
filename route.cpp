@@ -67,7 +67,7 @@ void route::readFromFile(const QString& filename) {
                waypoints.push_back(coordinates(latitude, longitude));
             }
         }
-   }
+    }
 }
 
 coordinates& route::operator [](const int position) {

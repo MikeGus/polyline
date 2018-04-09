@@ -23,8 +23,8 @@ public:
     bool operator ==(const coordinates& other) const;
 
 private:
-    float latitude;
-    float longitude;
+    double latitude;
+    double longitude;
 };
 
 #endif // COORDINATES_H
