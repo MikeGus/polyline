@@ -104,7 +104,7 @@ void presenter::removeWaypoint(size_t selectedRoute, size_t selectedPoint) {
 }
 
 void presenter::saveState() {
-    QString filename("saved_state.xml");
+    QString filename(backupPath);
     QFile backup(filename);
 
     backup.open(QIODevice::WriteOnly);
@@ -148,7 +148,7 @@ void presenter::saveState() {
 
 
 void presenter::loadState() {
-    QString filename("saved_state.xml");
+    QString filename(backupPath);
     QFile backup(filename);
 
     if (!backup.open(QIODevice::ReadOnly | QFile::Text)) {

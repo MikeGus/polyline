@@ -127,7 +127,8 @@ void MainWindow::on_changeWaypointButton_clicked() {
 }
 
 void MainWindow::on_openRouteButton_clicked() {
-    QStringList files = QFileDialog::getOpenFileNames(this, tr("Выберите файлы"), QDir::homePath(), tr("GPX files (*.gpx)"));
+    QStringList files = QFileDialog::getOpenFileNames(this, tr("Выберите файлы"), QString("routes"),
+                                                      tr("GPX files (*.gpx)"));
     for (auto file : files) {
         emit addRouteFromFileSignal(file);
     }

@@ -6,6 +6,8 @@
 #include <QTableWidget>
 #include "routemanager.h"
 
+static const QString backupPath("savedstate.dat");
+
 class presenter : public QObject {
     Q_OBJECT
 public:
