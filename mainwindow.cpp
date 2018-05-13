@@ -45,11 +45,18 @@ MainWindow::MainWindow(QWidget *parent) :
     setupUndoStack();
     mediator = new presenter(undoStack, routes, this, this);
 
+    plot = new QCustomPlot();
+    plot->xAxis->setLabel("Пройденный путь, км");
+    plot->yAxis->setLabel("Высота на уровнем моря, м");
+    plot->setWindowTitle("График высоты");
+    plot->resize(800, 600);
+
     setupCommandSignals();
     loadState();
  }
 
 MainWindow::~MainWindow() {
+    delete plot;
     delete mediator;
     delete undoStack;
     delete routes;

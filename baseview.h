@@ -8,6 +8,7 @@
 #include <QUndoStack>
 #include "presenter.h"
 #include <QTextBrowser>
+#include "qcustomplot/qcustomplot.h"
 
 class baseview : public QMainWindow
 {
@@ -16,17 +17,6 @@ public:
     explicit baseview(QWidget *parent = nullptr);
 
 public slots:
-//    virtual size_t getSelectedRoute() const = 0;
-
-//    virtual size_t getSelectedWaypoint() const = 0;
-
-//    virtual size_t getRouteCount() const = 0;
-
-//    virtual size_t getWaypointCount() const = 0;
-
-//    virtual QList<route> getRoutes() const = 0;
-
-//    virtual QList<coordinates> getWaypoints() const = 0;
 
     virtual void addRoute(route& newRoute, size_t position);
 
@@ -49,12 +39,16 @@ protected slots:
 
     size_t getSelectedRow(const QTableWidget* table) const;
 
+    void updatePlot(size_t selectedRow);
+
 protected:
     presenter* mediator;
 
     QTableWidget* routeTableWidget;
     QTableWidget* pointTableWidget;
     QTextBrowser* polylineText;
+
+    QCustomPlot* plot;
 };
 
 #endif // BASEVIEW_H

@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui printsupport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -37,7 +37,8 @@ SOURCES += \
     command/deleteroutecommand.cpp \
     presenter.cpp \
     baseview.cpp \
-    testview.cpp
+    testview.cpp \
+    qcustomplot/qcustomplot.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -52,7 +53,8 @@ HEADERS += \
     routemanager.h \
     presenter.h \
     baseview.h \
-    testview.h
+    testview.h \
+    qcustomplot/qcustomplot.h
 
 FORMS += \
         mainwindow.ui
