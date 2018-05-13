@@ -2,12 +2,13 @@
 #define EDITWAYPOINTCOMMAND_H
 
 #include <QUndoCommand>
+#include <QVector>
 #include "../routemanager.h"
 
 class editwaypointcommand: public QUndoCommand {
 public:
-    editwaypointcommand(routemanager* routes, size_t routeIndex, coordinates& editWaypoint,
-                        coordinates& previousWaypoint, size_t position,
+    editwaypointcommand(routemanager* routes, size_t routeIndex, QVector<coordinates>& editWaypoints,
+                        QVector<coordinates>& previousWaypoints, QVector<size_t>& positions,
                         QUndoCommand* parent = nullptr);
 
     void redo() override;
@@ -16,9 +17,9 @@ public:
 private:
     routemanager* routes;
     size_t routeIndex;
-    coordinates editWaypoint;
-    coordinates previousWaypoint;
-    size_t position;
+    QVector<coordinates> editWaypoints;
+    QVector<coordinates> previousWaypoints;
+    QVector<size_t> positions;
 };
 
 #endif // EDITWAYPOINTCOMMAND_H

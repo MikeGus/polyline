@@ -1,8 +1,6 @@
 #include "routetest.h"
 #include "../route.h"
 
-#include <iostream>
-
 void routetest::toPolyline_1() {
     route testRoute;
     testRoute.addLast(coordinates(38.5, -120.2));

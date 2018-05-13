@@ -2,12 +2,12 @@
 #define ADDWAYPOINTCOMMAND_H
 
 #include <QUndoCommand>
-#include <vector>
+#include <QVector>
 #include "../routemanager.h"
 
 class addwaypointcommand: public QUndoCommand {
 public:
-    addwaypointcommand(routemanager* routes, size_t routeIndex, coordinates& newWaypoint,
+    addwaypointcommand(routemanager* routes, size_t routeIndex, QVector<coordinates>& newWaypoints,
                     QUndoCommand* parent = nullptr);
 
     void redo() override;
@@ -16,7 +16,7 @@ public:
 private:
     routemanager* routes;
     size_t routeIndex;
-    coordinates newWaypoint;
+    QVector<coordinates> newWaypoints;
 };
 
 #endif // ADDWAYPOINTCOMMAND_H

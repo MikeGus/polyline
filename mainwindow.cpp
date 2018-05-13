@@ -8,6 +8,7 @@
 #include <QFileDialog>
 #include <QDateTime>
 #include <QClipboard>
+#include <QVector>
 #include <QAction>
 #include <QMessageBox>
 #include <QXmlStreamWriter>
@@ -17,29 +18,32 @@
 
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),
+    baseview(parent),
     ui(new Ui::MainWindow) {
 
     ui->setupUi(this);
+    routeTableWidget = ui->routeTableWidget;
+    pointTableWidget = ui->pointTableWidget;
+    polylineText = ui->polylineText;
 
-    for (int i = 0; i < ui->routeTableWidget->horizontalHeader()->count(); ++i) {
-        ui->routeTableWidget->horizontalHeader()->setSectionResizeMode(
+    for (int i = 0; i < routeTableWidget->horizontalHeader()->count(); ++i) {
+        routeTableWidget->horizontalHeader()->setSectionResizeMode(
                     i, QHeaderView::Stretch);
     }
 
-    for (int i = 0; i < ui->pointTableWidget->horizontalHeader()->count(); ++i) {
-        ui->pointTableWidget->horizontalHeader()->setSectionResizeMode(
+    for (int i = 0; i < pointTableWidget->horizontalHeader()->count(); ++i) {
+        pointTableWidget->horizontalHeader()->setSectionResizeMode(
                     i, QHeaderView::Stretch);
     }
 
-    ui->routeTableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->pointTableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->routeTableWidget->setEditTriggers(QTableWidget::NoEditTriggers);
-    ui->pointTableWidget->setEditTriggers(QTableWidget::NoEditTriggers);
+    routeTableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
+    pointTableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
+    routeTableWidget->setEditTriggers(QTableWidget::NoEditTriggers);
+    pointTableWidget->setEditTriggers(QTableWidget::NoEditTriggers);
 
     routes = new routemanager(this);
     setupUndoStack();
-    mediator = new presenter(undoStack, routes, this);
+    mediator = new presenter(undoStack, routes, this, this);
 
     setupCommandSignals();
     loadState();
@@ -66,13 +70,13 @@ void MainWindow::setupUndoStack() {
 }
 
 void MainWindow::setupCommandSignals() {
-    connect(routes, SIGNAL(routeAdded(route&,size_t)), this, SLOT(addRoute(route&,size_t)));
-    connect(routes, SIGNAL(routeRemoved(size_t)), this, SLOT(removeRoute(size_t)));
-    connect(routes, SIGNAL(waypointAdded(size_t,coordinates&,size_t)), this, SLOT(addWaypoint(size_t,coordinates&,size_t)));
-    connect(routes, SIGNAL(waypointRemoved(size_t,size_t)), this, SLOT(removeWaypoint(size_t,size_t)));
-    connect(routes, SIGNAL(waypointEdited(size_t,coordinates&,size_t)), this, SLOT(editWaypoint(size_t,coordinates&,size_t)));
+    connect(routes, SIGNAL(routeAdded(route&,size_t)), mediator, SLOT(addRouteToView(route&,size_t)));
+    connect(routes, SIGNAL(routeRemoved(size_t)), mediator, SLOT(removeRouteFromView(size_t)));
+    connect(routes, SIGNAL(waypointAdded(size_t,coordinates&,size_t)), mediator, SLOT(addWaypointToView(size_t,coordinates&,size_t)));
+    connect(routes, SIGNAL(waypointRemoved(size_t,size_t)), mediator, SLOT(removeWaypointFromView(size_t,size_t)));
+    connect(routes, SIGNAL(waypointEdited(size_t,coordinates&,size_t)), mediator, SLOT(editWaypointInView(size_t,coordinates&,size_t)));
 
-    connect(this, SIGNAL(addRouteFromFileSignal(QString&)), mediator, SLOT(addRouteFromFile(QString&)));
+    connect(this, SIGNAL(addRouteFromFilesSignal(QStringList&)), mediator, SLOT(addRouteFromFiles(QStringList&)));
     connect(this, SIGNAL(addRouteFromPolylineSignal(QString&,QString&)), mediator, SLOT(addRouteFromPolyline(QString&,QString&)));
     connect(this, SIGNAL(addSampleRouteSignal(QString&)), mediator, SLOT(addSampleRoute(QString&)));
     connect(this, SIGNAL(addWaypointSignal(size_t,coordinates&)), mediator, SLOT(addWaypoint(size_t,coordinates&)));
@@ -99,26 +103,26 @@ void MainWindow::on_addRouteButton_clicked() {
 }
 
 void MainWindow::on_deleteRouteButton_clicked() {
-    emit removeRouteSignal(getSelectedRow(ui->routeTableWidget));
+    emit removeRouteSignal(getSelectedRow(routeTableWidget));
 }
 
 void MainWindow::on_createWaypointButton_clicked() {
-    int selectedRow = getSelectedRow(ui->routeTableWidget);
+    int selectedRow = getSelectedRow(routeTableWidget);
     coordinates waypoint(ui->latitudeDoubleSpinBox->value(), ui->longitudeDoubleSpinBox->value());
 
     emit addWaypointSignal(selectedRow, waypoint);
 }
 
 void MainWindow::on_deleteWaypointButton_clicked() {
-    size_t selectedRoute = getSelectedRow(ui->routeTableWidget);
-    size_t selectedPoint = getSelectedRow(ui->pointTableWidget);
+    size_t selectedRoute = getSelectedRow(routeTableWidget);
+    size_t selectedPoint = getSelectedRow(pointTableWidget);
 
     emit removeWaypointSignal(selectedRoute, selectedPoint);
 }
 
 void MainWindow::on_changeWaypointButton_clicked() {
-    size_t selectedRoute = getSelectedRow(ui->routeTableWidget);
-    size_t selectedPoint = getSelectedRow(ui->pointTableWidget);
+    size_t selectedRoute = getSelectedRow(routeTableWidget);
+    size_t selectedPoint = getSelectedRow(pointTableWidget);
 
     coordinates newCoordinates = coordinates(ui->latitudeDoubleSpinBox->value(),
                                              ui->longitudeDoubleSpinBox->value());
@@ -129,9 +133,7 @@ void MainWindow::on_changeWaypointButton_clicked() {
 void MainWindow::on_openRouteButton_clicked() {
     QStringList files = QFileDialog::getOpenFileNames(this, tr("Выберите файлы"), QString("routes"),
                                                       tr("GPX files (*.gpx)"));
-    for (auto file : files) {
-        emit addRouteFromFileSignal(file);
-    }
+    emit addRouteFromFilesSignal(files);
 }
 
 void MainWindow::on_routeTableWidget_cellClicked(int row, int column) {
@@ -141,7 +143,7 @@ void MainWindow::on_routeTableWidget_cellClicked(int row, int column) {
 
 void MainWindow::on_copyPolylineButton_clicked() {
     QClipboard *clipboard = QGuiApplication::clipboard();
-    clipboard->setText(ui->polylineText->toPlainText());
+    clipboard->setText(polylineText->toPlainText());
 }
 
 void MainWindow::on_addRouteFromPolyButton_clicked() {
@@ -159,99 +161,6 @@ void MainWindow::on_addRouteFromPolyButton_clicked() {
     if (isOk) {
         emit addRouteFromPolylineSignal(name, poly);
     }
-}
-
-void MainWindow::updateCurrentRoute(size_t selectedRow) {
-
-    ui->routeTableWidget->clearSelection();
-    ui->routeTableWidget->selectRow(selectedRow);
-    ui->polylineText->setText(QString::fromStdString(routes->at(selectedRow).generatePolyline().get()));
-
-    ui->pointTableWidget->clearContents();
-    size_t numberOfPoints = routes->at(selectedRow).getNumberOfPoints();
-
-    ui->pointTableWidget->setRowCount(numberOfPoints);
-    for (size_t i = 0; i < numberOfPoints; ++i) {
-        ui->pointTableWidget->setItem(i, 0,
-                                      new QTableWidgetItem(QString::number(routes->at(selectedRow)[i].getLatitude())));
-        ui->pointTableWidget->setItem(i, 1,
-                                      new QTableWidgetItem(QString::number(routes->at(selectedRow)[i].getLongitude())));
-    }
-}
-
-void MainWindow::updateRouteStats(size_t selectedRow) {
-    ui->routeTableWidget->setItem(selectedRow, 1, new QTableWidgetItem(QString::number(routes->at(selectedRow).length(), 'f', 1)));
-    ui->routeTableWidget->setItem(selectedRow, 2, new QTableWidgetItem(QDateTime::currentDateTime().toString()));
-
-    if (selectedRow == getSelectedRow(ui->routeTableWidget)) {
-        ui->polylineText->setText(QString::fromStdString(routes->at(selectedRow).generatePolyline().get()));
-    }
-}
-
-void MainWindow::addRoute(route& newRoute, size_t position) {
-    QTableWidgetItem* routeName = new QTableWidgetItem(newRoute.getName());
-    QTableWidgetItem* routeLength = new QTableWidgetItem(QString::number(newRoute.length(), 'f', 1));
-    QTableWidgetItem* routeDate = new QTableWidgetItem(newRoute.getDate());
-
-    ui->routeTableWidget->insertRow(position);
-    ui->routeTableWidget->setItem(position, 0, routeName);
-    ui->routeTableWidget->setItem(position, 1, routeLength);
-    ui->routeTableWidget->setItem(position, 2, routeDate);
-
-    updateCurrentRoute(position);
-}
-
-void MainWindow::removeRoute(size_t position) {
-    if (position == getSelectedRow(ui->routeTableWidget)) {
-        ui->pointTableWidget->clearContents();
-        ui->pointTableWidget->setRowCount(0);
-        ui->polylineText->clear();
-    }
-    ui->routeTableWidget->removeRow(position);
-}
-
-void MainWindow::addWaypoint(size_t routeIndex, coordinates& waypoint, size_t position) {
-
-    updateRouteStats(routeIndex);
-
-    if (routeIndex != getSelectedRow(ui->routeTableWidget)) {
-        updateCurrentRoute(routeIndex);
-    }
-
-    ui->pointTableWidget->insertRow(position);
-    ui->pointTableWidget->setItem(position, 0,
-                                  new QTableWidgetItem(QString::number(waypoint.getLatitude(), 'f', 5)));
-    ui->pointTableWidget->setItem(position, 1,
-                                  new QTableWidgetItem(QString::number(waypoint.getLongitude(), 'f', 5)));
-}
-
-void MainWindow::removeWaypoint(size_t routeIndex, size_t position) {
-    updateRouteStats(routeIndex);
-
-    if (routeIndex != getSelectedRow(ui->routeTableWidget)) {
-        updateCurrentRoute(routeIndex);
-    } else {
-        ui->pointTableWidget->removeRow(position);
-    }
-}
-
-void MainWindow::editWaypoint(size_t routeIndex, coordinates& editWaypoint,
-                              size_t position) {
-    updateCurrentRoute(routeIndex);
-    updateRouteStats(routeIndex);
-
-    ui->pointTableWidget->setItem(position, 0,
-                                  new QTableWidgetItem(QString::number(editWaypoint.getLatitude(), 'f', 5)));
-    ui->pointTableWidget->setItem(position, 1,
-                                  new QTableWidgetItem(QString::number(editWaypoint.getLongitude(), 'f', 5)));
-}
-
-size_t MainWindow::getSelectedRow(const QTableWidget* table) const {
-    if (table->selectedItems().empty()) {
-        return -1;
-    }
-
-    return table->selectedItems().first()->row();
 }
 
 void MainWindow::displayError(const char* msg) {

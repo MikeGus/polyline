@@ -1,17 +1,21 @@
 #include "addwaypointcommand.h"
 
 addwaypointcommand::addwaypointcommand(routemanager* routes, size_t routeIndex,
-                                       coordinates& newWaypoint,
+                                       QVector<coordinates>& newWaypoint,
                                        QUndoCommand* parent):
     QUndoCommand(parent), routes(routes), routeIndex(routeIndex),
-    newWaypoint(newWaypoint) {
+    newWaypoints(newWaypoint) {
 }
 
 void addwaypointcommand::redo() {
-    routes->addWaypoint(routeIndex, newWaypoint,
-                        routes->at(routeIndex).getNumberOfPoints());
+    for (auto& newWaypoint : newWaypoints) {
+        routes->addWaypoint(routeIndex, newWaypoint,
+                            routes->at(routeIndex).getNumberOfPoints());
+    }
 }
 
 void addwaypointcommand::undo() {
-    routes->removeWaypoint(routeIndex, routes->at(routeIndex).getNumberOfPoints() - 1);
+    for (int i = 0; i < newWaypoints.length(); ++i) {
+        routes->removeWaypoint(routeIndex, routes->at(routeIndex).getNumberOfPoints() - 1);
+    }
 }

@@ -1,15 +1,19 @@
 #include "deleteroutecommand.h"
 
-deleteroutecommand::deleteroutecommand(routemanager* routes, route& delRoute,
-                                       size_t position, QUndoCommand* parent):
-    QUndoCommand(parent), routes(routes), delRoute(delRoute),
-    position(position) {
+deleteroutecommand::deleteroutecommand(routemanager* routes, QVector<route>& delRoutes,
+                                       QVector<size_t>& positions, QUndoCommand* parent):
+    QUndoCommand(parent), routes(routes), delRoutes(delRoutes),
+    positions(positions) {
 }
 
 void deleteroutecommand::redo() {
-    routes->removeRoute(position);
+    for (size_t& position : positions) {
+        routes->removeRoute(position);
+    }
 }
 
 void deleteroutecommand::undo() {
-    routes->addRoute(delRoute, position);
+    for (size_t i = 0; i < delRoutes.size(); ++i) {
+        routes->addRoute(delRoutes[i], positions[i]);
+    }
 }

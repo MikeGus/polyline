@@ -185,6 +185,11 @@
            <string>Долгота</string>
           </property>
          </column>
+         <column>
+          <property name="text">
+           <string>Высота</string>
+          </property>
+         </column>
         </widget>
        </item>
       </layout>

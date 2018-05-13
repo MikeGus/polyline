@@ -1,18 +1,22 @@
 #include "editwaypointcommand.h"
 
 editwaypointcommand::editwaypointcommand(routemanager* routes, size_t routeIndex,
-                                         coordinates& editWaypoint,
-                                         coordinates& previousWaypoint,
-                                         size_t position,
+                                         QVector<coordinates>& editWaypoints,
+                                         QVector<coordinates>& previousWaypoints,
+                                         QVector<size_t>& positions,
                                          QUndoCommand* parent):
     QUndoCommand(parent), routes(routes), routeIndex(routeIndex),
-    editWaypoint(editWaypoint), previousWaypoint(previousWaypoint), position(position) {
+    editWaypoints(editWaypoints), previousWaypoints(previousWaypoints), positions(positions) {
 }
 
 void editwaypointcommand::redo() {
-    routes->editWaypoint(routeIndex, editWaypoint, position);
+    for (size_t i = 0; i < editWaypoints.length(); ++i) {
+        routes->editWaypoint(routeIndex, editWaypoints[i], positions[i]);
+    }
 }
 
 void editwaypointcommand::undo() {
-    routes->editWaypoint(routeIndex, previousWaypoint, position);
+    for (size_t i = 0; i < editWaypoints.length(); ++i) {
+        routes->editWaypoint(routeIndex, previousWaypoints[i], positions[i]);
+    }
 }

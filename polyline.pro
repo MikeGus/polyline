@@ -35,7 +35,9 @@ SOURCES += \
     command/editwaypointcommand.cpp \
     routemanager.cpp \
     command/deleteroutecommand.cpp \
-    presenter.cpp
+    presenter.cpp \
+    baseview.cpp \
+    testview.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -48,7 +50,9 @@ HEADERS += \
     command/deletewaypointcommand.h \
     command/editwaypointcommand.h \
     routemanager.h \
-    presenter.h
+    presenter.h \
+    baseview.h \
+    testview.h
 
 FORMS += \
         mainwindow.ui

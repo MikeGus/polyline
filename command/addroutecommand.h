@@ -2,11 +2,12 @@
 #define ADDROUTECOMMAND_H
 
 #include <QUndoCommand>
+#include <QVector>
 #include "../routemanager.h"
 
 class addroutecommand: public QUndoCommand {
 public:
-    addroutecommand(routemanager* routes, route& newRoute,
+    addroutecommand(routemanager* routes, QVector<route>& newRoutes,
                     QUndoCommand* parent = nullptr);
 
     void redo() override;
@@ -14,7 +15,7 @@ public:
 
 private:
     routemanager* routes;
-    route newRoute;
+    QVector<route> newRoutes;
 };
 
 #endif // ADDROUTECOMMAND_H

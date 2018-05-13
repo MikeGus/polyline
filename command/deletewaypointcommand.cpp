@@ -1,16 +1,20 @@
 #include "deletewaypointcommand.h"
 
 deletewaypointcommand::deletewaypointcommand(routemanager* routes, size_t routeIndex,
-                                          coordinates& delWaypoint, size_t position,
+                                          QVector<coordinates>& delWaypoints, QVector<size_t>& positions,
                                           QUndoCommand* parent):
     QUndoCommand(parent), routes(routes), routeIndex(routeIndex),
-    delWaypoint(delWaypoint), position(position) {
+    delWaypoints(delWaypoints), positions(positions) {
 }
 
 void deletewaypointcommand::redo() {
-    routes->removeWaypoint(routeIndex, position);
+    for (size_t& position : positions) {
+        routes->removeWaypoint(routeIndex, position);
+    }
 }
 
 void deletewaypointcommand::undo() {
-    routes->addWaypoint(routeIndex, delWaypoint, position);
+    for (size_t i = 0; i < delWaypoints.length(); ++i) {
+        routes->addWaypoint(routeIndex, delWaypoints[i], positions[i]);
+    }
 }

@@ -1,14 +1,18 @@
 #include "addroutecommand.h"
 
-addroutecommand::addroutecommand(routemanager* routes, route& newRoute,
+addroutecommand::addroutecommand(routemanager* routes, QVector<route>& newRoutes,
                                  QUndoCommand* parent):
-    QUndoCommand(parent), routes(routes), newRoute(newRoute) {
+    QUndoCommand(parent), routes(routes), newRoutes(newRoutes) {
 }
 
 void addroutecommand::redo() {
-    routes->addRoute(newRoute, routes->size());
+    for (auto& newRoute : newRoutes) {
+        routes->addRoute(newRoute, routes->size());
+    }
 }
 
 void addroutecommand::undo() {
-    routes->removeRoute(routes->size() - 1);
+    for (int i = 0; i < newRoutes.length(); ++i) {
+        routes->removeRoute(routes->size() - 1);
+    }
 }

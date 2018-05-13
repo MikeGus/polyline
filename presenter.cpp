@@ -3,6 +3,7 @@
 #include <QFileInfo>
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
+#include <QVector>
 
 #include "polyline.h"
 #include "command/addroutecommand.h"
@@ -10,9 +11,10 @@
 #include "command/deleteroutecommand.h"
 #include "command/deletewaypointcommand.h"
 #include "command/editwaypointcommand.h"
+#include "baseview.h"
 
-presenter::presenter(QUndoStack* undoStack, routemanager* routeManager, QObject *parent) :
-    QObject(parent), undoStack(undoStack), routeManager(routeManager) {
+presenter::presenter(QUndoStack* undoStack, routemanager* routeManager, baseview* view, QObject *parent) :
+    QObject(parent), undoStack(undoStack), routeManager(routeManager), view(view) {
 }
 
 void presenter::addSampleRoute(QString& name) {
@@ -21,8 +23,9 @@ void presenter::addSampleRoute(QString& name) {
         return;
     }
 
-    route newRoute(name, QDateTime::currentDateTime().toString());
-    undoStack->push(new addroutecommand(routeManager, newRoute));
+    QVector<route> newRoutes;
+    newRoutes.push_back(route(name, QDateTime::currentDateTime().toString()));
+    undoStack->push(new addroutecommand(routeManager, newRoutes));
 }
 
 void presenter::addRouteFromPolyline(QString& name, QString& poly) {
@@ -32,19 +35,26 @@ void presenter::addRouteFromPolyline(QString& name, QString& poly) {
     }
     try {
         polyline routePolyline(poly.toStdString());
-        route newRoute(name, QDateTime::currentDateTime().toString(), routePolyline);
-        undoStack->push(new addroutecommand(routeManager, newRoute));
+
+        QVector<route> newRoutes;
+        newRoutes.push_back(route(name, QDateTime::currentDateTime().toString(), routePolyline));
+        undoStack->push(new addroutecommand(routeManager, newRoutes));
     } catch(std::logic_error& er) {
         emit displayError("Некорректный полилайн");
     }
 }
 
-void presenter::addRouteFromFile(QString& filename) {
+void presenter::addRouteFromFiles(QStringList& filenames) {
     try {
-        QFileInfo fileInfo(filename);
-        route newRoute(filename, fileInfo.metadataChangeTime().toString());
-        newRoute.readFromFile(filename);
-        undoStack->push(new addroutecommand(routeManager, newRoute));
+        QVector<route> newRoutes;
+        for (auto& filename : filenames) {
+            QFileInfo fileInfo(filename);
+            route newRoute(filename, fileInfo.metadataChangeTime().toString());
+            newRoute.readFromFile(filename);
+
+            newRoutes.push_back(newRoute);
+        }
+        undoStack->push(new addroutecommand(routeManager, newRoutes));
     } catch(std::invalid_argument& er) {
         emit displayError(er.what());
     }
@@ -55,7 +65,12 @@ void presenter::removeRoute(size_t selectedRoute) {
         emit displayError("Недопустимый путь");
         return;
     }
-    undoStack->push(new deleteroutecommand(routeManager, routeManager->at(selectedRoute), selectedRoute));
+    QVector<route> delRoutes;
+    delRoutes.push_back(routeManager->at(selectedRoute));
+    QVector<size_t> selectedRoutes;
+    selectedRoutes.push_back(selectedRoute);
+
+    undoStack->push(new deleteroutecommand(routeManager, delRoutes, selectedRoutes));
 }
 
 void presenter::addWaypoint(size_t selectedRoute, coordinates& newPoint) {
@@ -68,7 +83,10 @@ void presenter::addWaypoint(size_t selectedRoute, coordinates& newPoint) {
         return;
     }
 
-    undoStack->push(new addwaypointcommand(routeManager, selectedRoute, newPoint));
+    QVector<coordinates> newPoints;
+    newPoints.push_back(newPoint);
+
+    undoStack->push(new addwaypointcommand(routeManager, selectedRoute, newPoints));
 }
 
 void presenter::editWaypoint(size_t selectedRoute, size_t selectedPoint, coordinates& newPoint) {
@@ -85,9 +103,18 @@ void presenter::editWaypoint(size_t selectedRoute, size_t selectedPoint, coordin
         return;
     }
 
-    undoStack->push(new editwaypointcommand(routeManager, selectedRoute, newPoint,
-                                            routeManager->at(selectedRoute)[selectedPoint],
-                                            selectedPoint));
+    QVector<coordinates> newPoints;
+    newPoints.push_back(newPoint);
+
+    QVector<coordinates> oldPoints;
+    oldPoints.push_back(routeManager->at(selectedRoute)[selectedPoint]);
+
+    QVector<size_t> selectedPoints;
+    selectedPoints.push_back(selectedPoint);
+
+    undoStack->push(new editwaypointcommand(routeManager, selectedRoute, newPoints,
+                                            oldPoints,
+                                            selectedPoints));
 }
 
 void presenter::removeWaypoint(size_t selectedRoute, size_t selectedPoint) {
@@ -99,8 +126,14 @@ void presenter::removeWaypoint(size_t selectedRoute, size_t selectedPoint) {
         emit displayError("Недопустимая позиция для изменения точки");
         return;
     }
-    undoStack->push(new deletewaypointcommand(routeManager, selectedRoute, routeManager->at(selectedRoute)[selectedPoint],
-                                              selectedPoint));
+    QVector<size_t> selectedPoints;
+    selectedPoints.push_back(selectedPoint);
+
+    QVector<coordinates> oldPoints;
+    oldPoints.push_back(routeManager->at(selectedRoute)[selectedPoint]);
+
+    undoStack->push(new deletewaypointcommand(routeManager, selectedRoute, oldPoints,
+                                              selectedPoints));
 }
 
 void presenter::saveState() {
@@ -151,6 +184,8 @@ void presenter::loadState() {
     QString filename(backupPath);
     QFile backup(filename);
 
+    QVector<route> newRoutes;
+
     if (!backup.open(QIODevice::ReadOnly | QFile::Text)) {
         return;
     }
@@ -186,7 +221,7 @@ void presenter::loadState() {
                             reader.skipCurrentElement();
                         }
                     }
-                    undoStack->push(new addroutecommand(routeManager, newRoute));
+                    newRoutes.push_back(newRoute);
                 } else {
                     reader.skipCurrentElement();
                 }
@@ -195,4 +230,31 @@ void presenter::loadState() {
             reader.skipCurrentElement();
         }
     }
+    undoStack->push(new addroutecommand(routeManager, newRoutes));
+}
+
+void presenter::addRouteToView(route& newRoute, size_t position) {
+    view->addRoute(newRoute, position);
+}
+
+void presenter::removeRouteFromView(size_t position) {
+    view->removeRoute(position);
+}
+
+void presenter::addWaypointToView(size_t routePosition, coordinates& waypoint,
+                       size_t waypointPosition) {
+    view->addWaypoint(routePosition, waypoint, waypointPosition);
+}
+
+void presenter::removeWaypointFromView(size_t routePosition, size_t waypointPosition) {
+    view->removeWaypoint(routePosition, waypointPosition);
+}
+
+void presenter::editWaypointInView(size_t routePosition, coordinates& waypoint,
+                                   size_t waypointPosition) {
+    view->editWaypoint(routePosition, waypoint, waypointPosition);
+}
+
+const route& presenter::getRoute(size_t routePosition) const {
+    return routeManager->at(routePosition);
 }
