@@ -1,5 +1,7 @@
 QT += gui \
-        testlib
+        testlib \
+        printsupport
+
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -30,7 +32,11 @@ SOURCES += \
     ../routemanager.cpp \
     ../command/deleteroutecommand.cpp \
     ../presenter.cpp \
-    routemanagertest.cpp
+    routemanagertest.cpp \
+    ../testview.cpp \
+    ../baseview.cpp \
+    ../qcustomplot/qcustomplot.cpp \
+    uitest.cpp
 
 HEADERS += \
     routetest.h \
@@ -44,4 +50,8 @@ HEADERS += \
     ../routemanager.h \
     ../command/deleteroutecommand.h \
     ../presenter.h \
-    routemanagertest.h
+    routemanagertest.h \
+    ../testview.h \
+    ../baseview.h \
+    ../qcustomplot/qcustomplot.h \
+    uitest.h

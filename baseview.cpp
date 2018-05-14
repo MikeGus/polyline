@@ -65,15 +65,16 @@ void baseview::addWaypoint(size_t routeIndex, coordinates& waypoint, size_t posi
 
     if (routeIndex != getSelectedRow(routeTableWidget)) {
         updateCurrentRoute(routeIndex);
+    } else {
+        pointTableWidget->insertRow(position);
+        pointTableWidget->setItem(position, 0,
+                                      new QTableWidgetItem(QString::number(waypoint.getLatitude(), 'f', 5)));
+        pointTableWidget->setItem(position, 1,
+                                      new QTableWidgetItem(QString::number(waypoint.getLongitude(), 'f', 5)));
+        pointTableWidget->setItem(position, 2,
+                                      new QTableWidgetItem(QString::number(waypoint.getHeight(), 'f', 5)));
     }
 
-    pointTableWidget->insertRow(position);
-    pointTableWidget->setItem(position, 0,
-                                  new QTableWidgetItem(QString::number(waypoint.getLatitude(), 'f', 5)));
-    pointTableWidget->setItem(position, 1,
-                                  new QTableWidgetItem(QString::number(waypoint.getLongitude(), 'f', 5)));
-    pointTableWidget->setItem(position, 2,
-                                  new QTableWidgetItem(QString::number(waypoint.getHeight(), 'f', 5)));
     updatePlot(routeIndex);
 }
 

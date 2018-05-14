@@ -15,6 +15,18 @@ public:
 
 public slots:
 
+    void setMediator(presenter* mediator);
+
+    int pointNumber();
+
+    int routeNumber();
+
+    route getRoute(int position);
+
+    coordinates getCoordinates(int position);
+
+    void clear();
+
     virtual void displayError(const char* msg) override;
 
 };
