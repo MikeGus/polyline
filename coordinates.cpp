@@ -1,16 +1,20 @@
 #include "coordinates.h"
 #include <cmath>
 
-coordinates::coordinates(const float latitude, const float longitude):
-    latitude(latitude), longitude(longitude) {
+coordinates::coordinates(const float latitude, const float longitude, const float height):
+    latitude(latitude), longitude(longitude), height(height) {
 }
 
-float coordinates::getLatitude() const {
+double coordinates::getLatitude() const {
     return this->latitude;
 }
 
-float coordinates::getLongitude() const {
+double coordinates::getLongitude() const {
     return this->longitude;
+}
+
+double coordinates::getHeight() const {
+    return this->height;
 }
 
 void coordinates::setLatitude(const float latitude) {
@@ -19,6 +23,10 @@ void coordinates::setLatitude(const float latitude) {
 
 void coordinates::setLongitude(const float longitude) {
     this->longitude = longitude;
+}
+
+void coordinates::setHeight(const float height) {
+    this->height = height;
 }
 
 const coordinates coordinates::operator -(const coordinates& other) const {

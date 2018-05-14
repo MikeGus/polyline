@@ -152,28 +152,28 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
+       <item row="4" column="0">
         <widget class="QPushButton" name="createWaypointButton">
          <property name="text">
           <string>Добавить</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="1">
+       <item row="4" column="1">
         <widget class="QPushButton" name="changeWaypointButton">
          <property name="text">
           <string>Изменить</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="2">
+       <item row="4" column="2">
         <widget class="QPushButton" name="deleteWaypointButton">
          <property name="text">
           <string>Удалить</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="0" colspan="3">
+       <item row="6" column="0" colspan="3">
         <widget class="QTableWidget" name="pointTableWidget">
          <column>
           <property name="text">
@@ -190,6 +190,33 @@
            <string>Высота</string>
           </property>
          </column>
+        </widget>
+       </item>
+       <item row="2" column="1" colspan="2">
+        <widget class="QDoubleSpinBox" name="heightDoubleSpinBox">
+         <property name="decimals">
+          <number>1</number>
+         </property>
+         <property name="minimum">
+          <double>-12000.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>12000.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Высота</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0">
+        <widget class="QPushButton" name="showGraphButton">
+         <property name="text">
+          <string>Показать график высоты</string>
+         </property>
         </widget>
        </item>
       </layout>

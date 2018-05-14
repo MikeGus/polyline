@@ -3,6 +3,7 @@
 #include <vector>
 #include <QDebug>
 #include <QFile>
+#include <QFileInfo>
 #include <QXmlStreamReader>
 
 static const double s_presision   = 100000.0;
@@ -34,41 +35,115 @@ route::route(const QString &name, const QString &date, const polyline& poly):
     };
 }
 
-void route::readFromFile(const QString& filename) {
-    QFile file(filename);
-    if (!file.open(QFile::ReadOnly | QFile::Text)) {
+void route::readFromFile(const QString &filename) {
+    QFile backup(filename);
+
+    if (!backup.open(QIODevice::ReadOnly | QFile::Text)) {
         return;
     }
 
-    QXmlStreamReader reader(file.readAll());
-    while (!reader.atEnd() && !reader.hasError()) {
-        auto token = reader.readNext();
-        if (token == QXmlStreamReader::StartElement) {
-            if (reader.name() == "name") {
-                name = reader.readElementText();
+    QFileInfo info(filename);
+    this->name = info.fileName();
+
+    QXmlStreamReader reader(&backup);
+
+    if (reader.readNextStartElement()) {
+        if (reader.name() == "gpx") {
+            while (reader.readNextStartElement()) {
+                if (reader.name() == "trk") {
+                    while (reader.readNextStartElement()) {
+                        if (reader.name() == "name") {
+                            this->name = reader.readElementText();
+                        } else if (reader.name() == "trkseg") {
+                            while (reader.readNextStartElement()) {
+                                if (reader.name() == "trkpt") {
+                                    QXmlStreamAttributes attr = reader.attributes();
+                                    bool bOk = false;
+
+                                    double latitude = attr.value("lat").toDouble(&bOk);
+                                    if (!bOk) {
+                                        throw std::invalid_argument("Широта отсутствует");
+                                    }
+                                    if (fabs(latitude) > 90) {
+                                        throw std::invalid_argument("Широта имеет некорректное значение");
+                                    }
+
+                                    double longitude = attr.value("lon").toDouble(&bOk);
+                                    if (!bOk) {
+                                        throw std::invalid_argument("Долгота отсутствует");
+                                    }
+                                    if (fabs(longitude) > 180) {
+                                        throw std::invalid_argument("Долгота имеет некорректное значение");
+                                    }
+
+                                    double height = 0;
+
+                                    while (reader.readNextStartElement()) {
+                                        if (reader.name() == "ele") {
+                                            height = reader.readElementText().toDouble(&bOk);
+                                            if (!bOk) {
+                                                throw std::invalid_argument("Высота отсутствует");
+                                            }
+                                        } else {
+                                            reader.skipCurrentElement();
+                                        }
+                                    }
+                                    this->waypoints.push_back(coordinates(latitude, longitude, height));
+                                } else {
+                                    reader.skipCurrentElement();
+                                }
+                            }
+                        } else {
+                            reader.skipCurrentElement();
+                        }
+                    }
+                } else {
+                    reader.skipCurrentElement();
+                }
             }
-            if (reader.name() == "trkpt") {
-               QXmlStreamAttributes attrib = reader.attributes();
-               bool bOk = false;
-               double longitude = attrib.value("lon").toDouble(&bOk);
-               if (!bOk) {
-                   throw std::invalid_argument("Долгота отсутствует");
-               }
-               if (fabs(longitude) > 180) {
-                   throw std::invalid_argument("Долгота имеет некорректное значение");
-               }
-               double latitude = attrib.value("lat").toDouble(&bOk);
-               if (!bOk) {
-                   throw std::invalid_argument("Широта отсутствует");
-               }
-               if (fabs(latitude) > 90) {
-                   throw std::invalid_argument("Широта имеет некорректное значение");
-               }
-               waypoints.push_back(coordinates(latitude, longitude));
-            }
+        } else {
+            reader.skipCurrentElement();
         }
     }
 }
+
+//void route::readFromFile(const QString& filename) {
+//    QFile file(filename);
+//    if (!file.open(QFile::ReadOnly | QFile::Text)) {
+//        return;
+//    }
+
+//    QXmlStreamReader reader(file.readAll());
+//    while (!reader.atEnd() && !reader.hasError()) {
+//        auto token = reader.readNext();
+//        if (token == QXmlStreamReader::StartElement) {
+//            if (reader.name() == "name") {
+//                name = reader.readElementText();
+//            }
+//            if (reader.name() == "trkpt") {
+//               QXmlStreamAttributes attrib = reader.attributes();
+//               bool bOk = false;
+//               double longitude = attrib.value("lon").toDouble(&bOk);
+//               if (!bOk) {
+//                   throw std::invalid_argument("Долгота отсутствует");
+//               }
+//               if (fabs(longitude) > 180) {
+//                   throw std::invalid_argument("Долгота имеет некорректное значение");
+//               }
+//               double latitude = attrib.value("lat").toDouble(&bOk);
+//               if (!bOk) {
+//                   throw std::invalid_argument("Широта отсутствует");
+//               }
+//               if (fabs(latitude) > 90) {
+//                   throw std::invalid_argument("Широта имеет некорректное значение");
+//               }
+//               if (reader.name() == "ele") {
+
+//               }
+//            }
+//        }
+//    }
+//}
 
 coordinates& route::operator [](const int position) {
     return waypoints[position];

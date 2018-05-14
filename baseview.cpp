@@ -20,6 +20,8 @@ void baseview::updateCurrentRoute(size_t selectedRow) {
                                       new QTableWidgetItem(QString::number(mediator->getRoute(selectedRow)[i].getLatitude())));
         pointTableWidget->setItem(i, 1,
                                       new QTableWidgetItem(QString::number(mediator->getRoute(selectedRow)[i].getLongitude())));
+        pointTableWidget->setItem(i, 2,
+                                      new QTableWidgetItem(QString::number(mediator->getRoute(selectedRow)[i].getHeight())));
     }
 }
 
@@ -53,7 +55,6 @@ void baseview::removeRoute(size_t position) {
         polylineText->clear();
 
         plot->clearGraphs();
-        plot->close();
     }
     routeTableWidget->removeRow(position);
 }
@@ -71,6 +72,8 @@ void baseview::addWaypoint(size_t routeIndex, coordinates& waypoint, size_t posi
                                   new QTableWidgetItem(QString::number(waypoint.getLatitude(), 'f', 5)));
     pointTableWidget->setItem(position, 1,
                                   new QTableWidgetItem(QString::number(waypoint.getLongitude(), 'f', 5)));
+    pointTableWidget->setItem(position, 2,
+                                  new QTableWidgetItem(QString::number(waypoint.getHeight(), 'f', 5)));
     updatePlot(routeIndex);
 }
 
@@ -96,6 +99,8 @@ void baseview::editWaypoint(size_t routeIndex, coordinates& editWaypoint,
                                   new QTableWidgetItem(QString::number(editWaypoint.getLatitude(), 'f', 5)));
     pointTableWidget->setItem(position, 1,
                                   new QTableWidgetItem(QString::number(editWaypoint.getLongitude(), 'f', 5)));
+    pointTableWidget->setItem(position, 2,
+                                  new QTableWidgetItem(QString::number(editWaypoint.getHeight(), 'f', 5)));
 }
 
 size_t baseview::getSelectedRow(const QTableWidget* table) const {
@@ -107,27 +112,28 @@ size_t baseview::getSelectedRow(const QTableWidget* table) const {
 }
 
 void baseview::updatePlot(size_t selectedRow) {
-    plot->close();
+    plot->clearGraphs();
     plot->addGraph();
 
-    QVector<double> x;
-    QVector<double> y;
-    for (int i = 0; i < 1000; ++i) {
-        x.append(i);
-        y.append(i * i);
+    route currentRoute(mediator->getRoute(selectedRow));
+
+    QVector<double> x = {0};
+    QVector<double> y = {currentRoute[0].getHeight()};
+
+    double distance = 0;
+    for (int i = 1; i < pointTableWidget->rowCount(); ++i) {
+        distance += currentRoute[i].distance(currentRoute[i - 1]);
+        x.append(distance / 1000);
+        y.append(currentRoute[i].getHeight());
     }
 
     double maxY = *std::max_element(y.begin(), y.end());
     double minY = *std::min_element(y.begin(), y.end());
 
-    double maxX = *std::max_element(x.begin(), x.end());
-    double minX = *std::min_element(x.begin(), x.end());
 
     plot->yAxis->setRange(minY - 10, maxY + 10);
-    plot->xAxis->setRange(minX, maxX);
+    plot->xAxis->setRange(x.first(), x.last());
 
     plot->graph(0)->setData(x, y);
     plot->replot();
-
-    plot->show();
 }

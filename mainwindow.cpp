@@ -146,6 +146,7 @@ void MainWindow::on_openRouteButton_clicked() {
 void MainWindow::on_routeTableWidget_cellClicked(int row, int column) {
     Q_UNUSED(column);
     updateCurrentRoute(row);
+    updatePlot(row);
 }
 
 void MainWindow::on_copyPolylineButton_clicked() {
@@ -194,4 +195,8 @@ void MainWindow::saveState() {
 
 void MainWindow::loadState() {
     emit loadStateSignal();
+}
+
+void MainWindow::on_showGraphButton_clicked() {
+    plot->show();
 }

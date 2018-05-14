@@ -14,7 +14,7 @@ void deletewaypointcommand::redo() {
 }
 
 void deletewaypointcommand::undo() {
-    for (size_t i = 0; i < delWaypoints.length(); ++i) {
+    for (int i = 0; i < delWaypoints.length(); ++i) {
         routes->addWaypoint(routeIndex, delWaypoints[i], positions[i]);
     }
 }

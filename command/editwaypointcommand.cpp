@@ -10,13 +10,13 @@ editwaypointcommand::editwaypointcommand(routemanager* routes, size_t routeIndex
 }
 
 void editwaypointcommand::redo() {
-    for (size_t i = 0; i < editWaypoints.length(); ++i) {
+    for (int i = 0; i < editWaypoints.length(); ++i) {
         routes->editWaypoint(routeIndex, editWaypoints[i], positions[i]);
     }
 }
 
 void editwaypointcommand::undo() {
-    for (size_t i = 0; i < editWaypoints.length(); ++i) {
+    for (int i = 0; i < editWaypoints.length(); ++i) {
         routes->editWaypoint(routeIndex, previousWaypoints[i], positions[i]);
     }
 }

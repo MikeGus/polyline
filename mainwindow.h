@@ -65,6 +65,8 @@ private slots:
 
     void closeEvent(QCloseEvent* event);
 
+    void on_showGraphButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     routemanager* routes;

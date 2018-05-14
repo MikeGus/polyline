@@ -4,15 +4,19 @@
 
 class coordinates {
 public:
-    coordinates(const float latitude=0.0, const float longitude=0.0);
+    coordinates(const float latitude=0.0, const float longitude=0.0, const float height=0.0);
 
-    float getLatitude() const;
+    double getLatitude() const;
 
-    float getLongitude() const;
+    double getLongitude() const;
+
+    double getHeight() const;
 
     void setLatitude(const float latitude);
 
     void setLongitude(const float longitude);
+
+    void setHeight(const float height);
 
     const coordinates operator -(const coordinates& other) const;
 
@@ -25,6 +29,7 @@ public:
 private:
     double latitude;
     double longitude;
+    double height;
 };
 
 #endif // COORDINATES_H

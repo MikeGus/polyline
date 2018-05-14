@@ -13,7 +13,7 @@ void deleteroutecommand::redo() {
 }
 
 void deleteroutecommand::undo() {
-    for (size_t i = 0; i < delRoutes.size(); ++i) {
+    for (int i = 0; i < delRoutes.size(); ++i) {
         routes->addRoute(delRoutes[i], positions[i]);
     }
 }
