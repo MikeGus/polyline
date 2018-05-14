@@ -166,6 +166,7 @@ void presenter::saveState() {
             QXmlStreamAttributes attr;
             attr.append("latitude", QString::number(routeManager->at(i)[j].getLatitude()));
             attr.append("longitude", QString::number(routeManager->at(i)[j].getLongitude()));
+            attr.append("height", QString::number(routeManager->at(i)[j].getHeight()));
             writer.writeAttributes(attr);
 
             writer.writeEndElement();
@@ -210,6 +211,7 @@ void presenter::loadState() {
 
                                     waypoint.setLatitude(attr.value("latitude").toDouble());
                                     waypoint.setLongitude(attr.value("longitude").toDouble());
+                                    waypoint.setHeight(attr.value("height").toDouble());
 
                                     newRoute.addLast(waypoint);
                                     reader.skipCurrentElement();

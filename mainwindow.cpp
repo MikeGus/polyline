@@ -115,7 +115,8 @@ void MainWindow::on_deleteRouteButton_clicked() {
 
 void MainWindow::on_createWaypointButton_clicked() {
     int selectedRow = getSelectedRow(routeTableWidget);
-    coordinates waypoint(ui->latitudeDoubleSpinBox->value(), ui->longitudeDoubleSpinBox->value());
+    coordinates waypoint(ui->latitudeDoubleSpinBox->value(), ui->longitudeDoubleSpinBox->value(),
+                         ui->heightDoubleSpinBox->value());
 
     emit addWaypointSignal(selectedRow, waypoint);
 }
@@ -132,7 +133,8 @@ void MainWindow::on_changeWaypointButton_clicked() {
     size_t selectedPoint = getSelectedRow(pointTableWidget);
 
     coordinates newCoordinates = coordinates(ui->latitudeDoubleSpinBox->value(),
-                                             ui->longitudeDoubleSpinBox->value());
+                                             ui->longitudeDoubleSpinBox->value(),
+                                             ui->heightDoubleSpinBox->value());
 
     emit editWaypointSignal(selectedRoute, selectedPoint, newCoordinates);
 }

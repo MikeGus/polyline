@@ -113,9 +113,13 @@ size_t baseview::getSelectedRow(const QTableWidget* table) const {
 
 void baseview::updatePlot(size_t selectedRow) {
     plot->clearGraphs();
-    plot->addGraph();
-
     route currentRoute(mediator->getRoute(selectedRow));
+
+    if (currentRoute.getNumberOfPoints() == 0) {
+        return;
+    }
+
+    plot->addGraph();
 
     QVector<double> x = {0};
     QVector<double> y = {currentRoute[0].getHeight()};
