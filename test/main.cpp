@@ -6,7 +6,7 @@
 #include <cstdio>
 #include "routemanagertest.h"
 #include "routetest.h"
-#include "uitest.h"
+#include "mediatortest.h"
 
 using namespace std;
 
@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
     QTest::qExec(new routetest, argc, argv);
     QTest::qExec(new routemanagertest, argc, argv);
-    QTest::qExec(new uitest, argc, argv);
+    QTest::qExec(new mediatortest, argc, argv);
 
     return 0;
 }

@@ -1,5 +1,5 @@
-#ifndef UITEST_H
-#define UITEST_H
+#ifndef MEDIATORTEST_H
+#define MEDIATORTEST_H
 
 #include <QObject>
 #include <QUndoStack>
@@ -9,12 +9,12 @@ class presenter;
 class testview;
 class routemanager;
 
-class uitest : public QObject {
+class mediatortest : public QObject {
     Q_OBJECT
 
 public:
-    uitest();
-    ~uitest();
+    mediatortest();
+    ~mediatortest();
 
 private slots:
 
@@ -46,6 +46,10 @@ private slots:
 
     void fromPolyIncorrect();
 
+    void graphCorrect();
+
+    void graphInCorrect();
+
 private:
     QUndoStack* stack;
     presenter* mediator;
@@ -57,4 +61,4 @@ private:
     void clear();
 };
 
-#endif // UITEST_H
+#endif // MEDIATORTEST_H

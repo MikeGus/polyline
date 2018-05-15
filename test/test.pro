@@ -36,7 +36,7 @@ SOURCES += \
     ../testview.cpp \
     ../baseview.cpp \
     ../qcustomplot/qcustomplot.cpp \
-    uitest.cpp
+    mediatortest.cpp
 
 HEADERS += \
     routetest.h \
@@ -54,4 +54,4 @@ HEADERS += \
     ../testview.h \
     ../baseview.h \
     ../qcustomplot/qcustomplot.h \
-    uitest.h
+    mediatortest.h

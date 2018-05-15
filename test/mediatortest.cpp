@@ -1,11 +1,12 @@
-#include "uitest.h"
+#include "mediatortest.h"
 #include "../testview.h"
 #include "../presenter.h"
 #include "../routemanager.h"
 #include <QUndoStack>
 #include <QUndoCommand>
+#include <QFile>
 
-uitest::uitest() {
+mediatortest::mediatortest() {
     stack = new QUndoStack;
     view = new testview;
     manager = new routemanager;
@@ -15,32 +16,50 @@ uitest::uitest() {
     setupSignals();
 }
 
-uitest::~uitest() {
+mediatortest::~mediatortest() {
     delete mediator;
     delete manager;
     delete view;
     delete stack;
 }
 
-void uitest::routeListCorrect() {
+void mediatortest::routeListCorrect() {
     clear();
+    QFile::remove(backupPath);
+
+    QFile::copy("savedstate1.dat", backupPath);
     mediator->loadState();
+    QCOMPARE(view->routeNumber(), 2);
+    QCOMPARE(view->pointNumber(), 3);
+    QCOMPARE(view->getRoute(0), route("route1",
+                                      "вт мая 15 21:19:32 2018"));
+
+    QCOMPARE(view->getRoute(1), route("route2",
+                                      "вт мая 15 21:19:54 2018"));
+    QCOMPARE(view->getCoordinates(0), coordinates(0, 2, 1));
+    QCOMPARE(view->getCoordinates(1), coordinates(5, 2, 1));
+    QCOMPARE(view->getCoordinates(2), coordinates(5, 3, 1));
 }
 
-void uitest::routeListIncorrect() {
+void mediatortest::routeListIncorrect() {
     clear();
+    QFile::remove(backupPath);
+    QFile::copy("savedstate2.dat", backupPath);
     mediator->loadState();
+    QCOMPARE(view->routeNumber(), 0);
+    QCOMPARE(view->pointNumber(), 0);
 }
 
-void uitest::createRouteCorrect() {
+void mediatortest::createRouteCorrect() {
     clear();
     QString name("1");
     QCOMPARE(view->routeNumber(), 0);
     mediator->addSampleRoute(name);
     QCOMPARE(view->routeNumber(), 1);
+    QCOMPARE(view->getRoute(0).getName(), name);
 }
 
-void uitest::createRouteIncorrect() {
+void mediatortest::createRouteIncorrect() {
     clear();
     QString name("saddas");
     QString poly("aflfasjlsakj");
@@ -49,7 +68,7 @@ void uitest::createRouteIncorrect() {
     QCOMPARE(view->routeNumber(), 0);
 }
 
-void uitest::deleteRouteCorrect() {
+void mediatortest::deleteRouteCorrect() {
     clear();
     QString name("1");
     QCOMPARE(view->routeNumber(), 0);
@@ -62,14 +81,14 @@ void uitest::deleteRouteCorrect() {
     QCOMPARE(view->routeNumber(), 3);
 }
 
-void uitest::deleteRouteInCorrect() {
+void mediatortest::deleteRouteInCorrect() {
     clear();
     QCOMPARE(view->routeNumber(), 0);
     mediator->removeRoute(0);
     QCOMPARE(view->routeNumber(), 0);
 }
 
-void uitest::createPointCorrect() {
+void mediatortest::createPointCorrect() {
     clear();
     QString name("1");
     coordinates correct(0, 0, 14);
@@ -79,9 +98,10 @@ void uitest::createPointCorrect() {
     QCOMPARE(view->pointNumber(), 0);
     mediator->addWaypoint(0, correct);
     QCOMPARE(view->pointNumber(), 1);
+    QCOMPARE(view->getCoordinates(0), correct);
 }
 
-void uitest::createPointInCorrect() {
+void mediatortest::createPointInCorrect() {
     clear();
     QString name("1");
     coordinates incorrect(0, 1800, 14);
@@ -92,7 +112,7 @@ void uitest::createPointInCorrect() {
     QCOMPARE(view->pointNumber(), 0);
 }
 
-void uitest::deletePointCorrect() {
+void mediatortest::deletePointCorrect() {
     clear();
     QString name("1");
     coordinates correct(0, 0, 14);
@@ -101,15 +121,17 @@ void uitest::deletePointCorrect() {
 
     QCOMPARE(view->pointNumber(), 0);
     mediator->addWaypoint(0, correct);
+    correct.setHeight(25);
     mediator->addWaypoint(0, correct);
     QCOMPARE(view->pointNumber(), 2);
 
     mediator->removeWaypoint(0, 0);
 
     QCOMPARE(view->pointNumber(), 1);
+    QCOMPARE(view->getCoordinates(0), correct);
 }
 
-void uitest::deletePointInCorrect() {
+void mediatortest::deletePointInCorrect() {
     clear();
     QString name("1");
     QCOMPARE(view->routeNumber(), 0);
@@ -122,7 +144,7 @@ void uitest::deletePointInCorrect() {
     QCOMPARE(view->pointNumber(), 0);
 }
 
-void uitest::editPointCorrect() {
+void mediatortest::editPointCorrect() {
     clear();
     QString name("1");
     coordinates correct(0, 0, 14);
@@ -136,9 +158,10 @@ void uitest::editPointCorrect() {
     QCOMPARE(view->pointNumber(), 1);
     mediator->editWaypoint(0, 0, newCorrect);
     QCOMPARE(view->pointNumber(), 1);
+    QCOMPARE(view->getCoordinates(0), newCorrect);
 }
 
-void uitest::editPointIncorrect() {
+void mediatortest::editPointIncorrect() {
     clear();
     QString name("1");
     coordinates correct(0, 0, 14);
@@ -152,28 +175,55 @@ void uitest::editPointIncorrect() {
     QCOMPARE(view->pointNumber(), 1);
     mediator->editWaypoint(0, 0, newInCorrect);
     QCOMPARE(view->pointNumber(), 1);
+    QCOMPARE(view->getCoordinates(0), correct);
 }
 
-void uitest::fromPolyCorrect() {
+void mediatortest::fromPolyCorrect() {
     clear();
     QString name("saddas");
     QString poly("_p~iF~ps|U_ulLnnqC_mqNvxq`@");
     QCOMPARE(view->routeNumber(), 0);
     mediator->addRouteFromPolyline(name, poly);
     QCOMPARE(view->routeNumber(), 1);
-
+    QCOMPARE(view->pointNumber(), 3);
+    QCOMPARE(view->getCoordinates(0), coordinates(38.5, -120.2));
+    QCOMPARE(view->getCoordinates(1), coordinates(40.7, -120.95));
+    QCOMPARE(view->getCoordinates(2), coordinates(43.252, -126.453));
 }
 
-void uitest::fromPolyIncorrect() {
+void mediatortest::fromPolyIncorrect() {
     clear();
     QString name("saddas");
     QString poly("_safjflsfsajslf");
     QCOMPARE(view->routeNumber(), 0);
     mediator->addRouteFromPolyline(name, poly);
     QCOMPARE(view->routeNumber(), 0);
+    QCOMPARE(view->pointNumber(), 0);
 }
 
-void uitest::setupSignals() {
+void mediatortest::graphCorrect() {
+    clear();
+    QFile::remove(backupPath);
+
+    QFile::copy("savedstate1.dat", backupPath);
+    mediator->loadState();
+    route rt = mediator->getRoute(1);
+    QCOMPARE(rt.getNumberOfPoints(), 3);
+
+    QCOMPARE(rt[0], coordinates(0, 2, 1));
+    QCOMPARE(rt[1], coordinates(5, 2, 1));
+    QCOMPARE(rt[2], coordinates(5, 3, 1));
+}
+
+void mediatortest::graphInCorrect() {
+    clear();
+    QString name("route");
+    mediator->addSampleRoute(name);
+    route rt = mediator->getRoute(0);
+    QCOMPARE(rt.getNumberOfPoints(), 0);
+}
+
+void mediatortest::setupSignals() {
     connect(manager, SIGNAL(routeAdded(route&,size_t)), mediator, SLOT(addRouteToView(route&,size_t)));
     connect(manager, SIGNAL(routeRemoved(size_t)), mediator, SLOT(removeRouteFromView(size_t)));
     connect(manager, SIGNAL(waypointAdded(size_t,coordinates&,size_t)), mediator, SLOT(addWaypointToView(size_t,coordinates&,size_t)));
@@ -181,7 +231,7 @@ void uitest::setupSignals() {
     connect(manager, SIGNAL(waypointEdited(size_t,coordinates&,size_t)), mediator, SLOT(editWaypointInView(size_t,coordinates&,size_t)));
 }
 
-void uitest::clear() {
+void mediatortest::clear() {
     while (manager->size()) {
         manager->removeRoute(0);
     }

@@ -5,6 +5,10 @@ testview::testview(QWidget* parent): baseview(parent) {
 
     routeTableWidget = new QTableWidget();
     pointTableWidget = new QTableWidget();
+
+    routeTableWidget->setColumnCount(3);
+    pointTableWidget->setColumnCount(3);
+
     plot = new QCustomPlot();
     polylineText = new QTextBrowser();
 }
