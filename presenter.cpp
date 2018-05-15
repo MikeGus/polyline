@@ -48,8 +48,7 @@ void presenter::addRouteFromFiles(QStringList& filenames) {
     try {
         QVector<route> newRoutes;
         for (auto& filename : filenames) {
-            QFileInfo fileInfo(filename);
-            route newRoute(filename, fileInfo.metadataChangeTime().toString());
+            route newRoute;
             newRoute.readFromFile(filename);
 
             newRoutes.push_back(newRoute);
@@ -257,6 +256,6 @@ void presenter::editWaypointInView(size_t routePosition, coordinates& waypoint,
     view->editWaypoint(routePosition, waypoint, waypointPosition);
 }
 
-const route& presenter::getRoute(size_t routePosition) const {
+route& presenter::getRoute(size_t routePosition) {
     return routeManager->at(routePosition);
 }

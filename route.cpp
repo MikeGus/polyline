@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QFileInfo>
+#include <QDateTime>
 #include <QXmlStreamReader>
 
 static const double s_presision   = 100000.0;
@@ -44,6 +45,7 @@ void route::readFromFile(const QString &filename) {
 
     QFileInfo info(filename);
     this->name = info.fileName();
+    this->date = info.lastModified().toString();
 
     QXmlStreamReader reader(&backup);
 
@@ -106,44 +108,6 @@ void route::readFromFile(const QString &filename) {
         }
     }
 }
-
-//void route::readFromFile(const QString& filename) {
-//    QFile file(filename);
-//    if (!file.open(QFile::ReadOnly | QFile::Text)) {
-//        return;
-//    }
-
-//    QXmlStreamReader reader(file.readAll());
-//    while (!reader.atEnd() && !reader.hasError()) {
-//        auto token = reader.readNext();
-//        if (token == QXmlStreamReader::StartElement) {
-//            if (reader.name() == "name") {
-//                name = reader.readElementText();
-//            }
-//            if (reader.name() == "trkpt") {
-//               QXmlStreamAttributes attrib = reader.attributes();
-//               bool bOk = false;
-//               double longitude = attrib.value("lon").toDouble(&bOk);
-//               if (!bOk) {
-//                   throw std::invalid_argument("Долгота отсутствует");
-//               }
-//               if (fabs(longitude) > 180) {
-//                   throw std::invalid_argument("Долгота имеет некорректное значение");
-//               }
-//               double latitude = attrib.value("lat").toDouble(&bOk);
-//               if (!bOk) {
-//                   throw std::invalid_argument("Широта отсутствует");
-//               }
-//               if (fabs(latitude) > 90) {
-//                   throw std::invalid_argument("Широта имеет некорректное значение");
-//               }
-//               if (reader.name() == "ele") {
-
-//               }
-//            }
-//        }
-//    }
-//}
 
 coordinates& route::operator [](const int position) {
     return waypoints[position];

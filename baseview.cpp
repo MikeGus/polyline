@@ -27,7 +27,8 @@ void baseview::updateCurrentRoute(size_t selectedRow) {
 
 void baseview::updateRouteStats(size_t selectedRow) {
     routeTableWidget->setItem(selectedRow, 1, new QTableWidgetItem(QString::number(mediator->getRoute(selectedRow).length(), 'f', 1)));
-    routeTableWidget->setItem(selectedRow, 2, new QTableWidgetItem(QDateTime::currentDateTime().toString()));
+    mediator->getRoute(selectedRow).setDate(QDateTime::currentDateTime().toString());
+    routeTableWidget->setItem(selectedRow, 2, new QTableWidgetItem(mediator->getRoute(selectedRow).getDate()));
 
     if (selectedRow == getSelectedRow(routeTableWidget)) {
         polylineText->setText(QString::fromStdString(mediator->getRoute(selectedRow).generatePolyline().get()));

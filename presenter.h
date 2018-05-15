@@ -51,7 +51,7 @@ public slots:
 
     void editWaypointInView(size_t routePosition, coordinates& waypoint, size_t waypointPosition);
 
-    const route& getRoute(size_t routePosition) const;
+    route& getRoute(size_t routePosition);
 
 private:
     QUndoStack* undoStack;
