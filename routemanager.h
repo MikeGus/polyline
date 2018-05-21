@@ -23,7 +23,8 @@ public:
 
     route& at(int position);
 
-    size_t size() ;
+    size_t size();
+
 
 signals:
     void routeAdded(route& newRoute,  size_t position);

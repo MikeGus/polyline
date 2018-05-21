@@ -6,6 +6,7 @@
 #include "coordinates.h"
 #include "polyline.h"
 #include <QString>
+#include "visitor.h"
 
 
 class route {
@@ -45,6 +46,8 @@ public:
     float length() const;
 
     bool operator ==(const route& other) const;
+
+    void accept(visitor& v);
 
 private:
     const polyline generatePolylineForWaypoint(const coordinates& waypoint) const;

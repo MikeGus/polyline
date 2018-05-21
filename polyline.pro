@@ -54,7 +54,8 @@ HEADERS += \
     presenter.h \
     baseview.h \
     testview.h \
-    qcustomplot/qcustomplot.h
+    qcustomplot/qcustomplot.h \
+    visitor.h
 
 FORMS += \
         mainwindow.ui

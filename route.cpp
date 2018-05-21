@@ -253,3 +253,7 @@ size_t route::getNumberOfPoints() const {
 bool route::operator ==(const route& other) const {
     return waypoints == other.waypoints;
 }
+
+void route::accept(visitor& v) {
+    v.visit(this);
+}
