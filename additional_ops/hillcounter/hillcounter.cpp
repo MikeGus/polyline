@@ -14,7 +14,7 @@ void hillcounter::visit(route* rm) {
         double dHeight = fabs((*rm)[i].getHeight() - (*rm)[i + 1].getHeight());
 
         double bigHillAngle = 15 / 180 * M_PI;
-        if (atan(dHeight / distance) > bigHillAngle) {
+        if (asin(dHeight / distance) > bigHillAngle) {
             count++;
         }
     }

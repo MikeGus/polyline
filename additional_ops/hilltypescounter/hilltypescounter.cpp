@@ -27,7 +27,7 @@ unsigned hilltypescounter::getHillHeightType(coordinates& c0, coordinates& c1) {
     double dHeight = fabs(c1.getHeight() - c0.getHeight());
     double distance = c1.distance(c0);
 
-    double angle = atan(distance / dHeight);
+    double angle = asin(distance / dHeight);
 
     if (angle > verySteep) {
         return 0;
