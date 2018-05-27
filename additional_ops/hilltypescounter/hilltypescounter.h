@@ -26,14 +26,15 @@ public:
 
     void visit(route* rm) override;
 
+    QVector<unsigned> heightTypes;
+
+    QVector<unsigned> lengthTypes;
+
 private:
 
     unsigned getHillHeightType(coordinates& c0, coordinates& c1);
 
     unsigned getHillLengthType(coordinates& c0, coordinates& c1);
-
-    QVector<unsigned> heightTypes;
-    QVector<unsigned> lengthTypes;
 };
 
 #endif // HILLTYPESCOUNTER_H

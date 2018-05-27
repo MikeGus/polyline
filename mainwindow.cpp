@@ -14,7 +14,13 @@
 #include <QXmlStreamWriter>
 #include <QXmlStreamReader>
 #include <QCloseEvent>
+#include <QLibrary>
+#include <QMessageBox>
+#include <QPushButton>
 #include "coordinates.h"
+#include "additional_ops/turntypescounter/turntypescounter.h"
+#include "additional_ops/hilltypescounter/hilltypescounter.h"
+#include "additional_ops/hillcounter/hillcounter.h"
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -53,9 +59,21 @@ MainWindow::MainWindow(QWidget *parent) :
 
     setupCommandSignals();
     loadState();
+    loadLibs();
+    addOpButtons();
  }
 
 MainWindow::~MainWindow() {
+    if (hillcount) {
+        delete hillcount;
+    }
+    if (turntypes) {
+        delete turntypes;
+    }
+    if (hilltypes) {
+        delete hilltypes;
+    }
+
     delete plot;
     delete mediator;
     delete undoStack;
@@ -201,4 +219,148 @@ void MainWindow::loadState() {
 
 void MainWindow::on_showGraphButton_clicked() {
     plot->show();
+}
+
+void MainWindow::loadLibs(){
+    QString hillcnt("operations/libhillcounter.so");
+    QString hilltypescnt("operations/libhilltypescounter.so");
+    QString turntypescnt("operations/libturntypescounter.so");
+
+    hilltypes = new QLibrary(hilltypescnt);
+    if (!hilltypes->load()) {
+       delete hilltypes;
+       hilltypes = nullptr;
+    }
+    hillcount = new QLibrary(hillcnt);
+    if (!hillcount->load()) {
+       delete hillcount;
+       hillcount = nullptr;
+    }
+    turntypes = new QLibrary(turntypescnt);
+    if (!turntypes->load()){
+       delete turntypes;
+       turntypes = nullptr;
+    }
+}
+
+void MainWindow::on_pushButton_clicked() {
+    QMessageBox pmbx(QMessageBox::Information, "Дополнительные операции", "");
+
+    QString str;
+    if (hillcount) {
+        str += "Подсчёт количества крутых склонов\n";
+    }
+    if (hilltypes) {
+        str += "Подсчёт количества склонов по типам\n";
+    }
+    if (turntypes) {
+        str += "Подсчёт количества поворотов по типам\n";
+    }
+    pmbx.setText(str);
+    pmbx.exec();
+}
+
+void MainWindow::addOpButtons() {
+    if (hillcount) {
+        QPushButton* btn = new QPushButton("Количество\nсклонов");
+        ui->operationsLayout->addWidget(btn);
+        connect(btn, SIGNAL(clicked(bool)), this, SLOT(showHillCount()));
+    }
+    if (hilltypes) {
+        QPushButton* btn = new QPushButton("Склоны\nпо типам");
+        ui->operationsLayout->addWidget(btn);
+        connect(btn, SIGNAL(clicked(bool)), this, SLOT(showHillTypes()));
+    }
+    if (turntypes) {
+        QPushButton* btn = new QPushButton("Повороты\nпо типам");
+        ui->operationsLayout->addWidget(btn);
+        connect(btn, SIGNAL(clicked(bool)), this, SLOT(showTurnTypes()));
+    }
+}
+
+void MainWindow::showTurnTypes() {
+    int selectedRow = getSelectedRow(routeTableWidget);
+    if (selectedRow == -1) {
+        return;
+    }
+    typedef turntypescounter* (*Create_turnTypesCounter)();
+    Create_turnTypesCounter create_turnTypesCounter = (Create_turnTypesCounter)turntypes->resolve("create_turnTypesCounter");
+
+    if (create_turnTypesCounter) {
+        turntypescounter *instance = create_turnTypesCounter();
+
+        if (instance) {
+            instance->visit(&(mediator->getRoute(selectedRow)));
+            QMessageBox pmbx(QMessageBox::Information, "Количество поворотов по типам", "");
+            QString text;
+            int i = 0;
+            for (auto& count : instance->turns) {
+                text += QString::number(i) + ": " + QString::number(count) + "\n";
+                ++i;
+            }
+            pmbx.setText(text);
+            pmbx.exec();
+            delete instance;
+        }
+    }
+}
+
+void MainWindow::showHillCount() {
+    int selectedRow = getSelectedRow(routeTableWidget);
+    if (selectedRow == -1) {
+        return;
+    }
+    typedef hillcounter* (*Create_hillCounter)();
+    Create_hillCounter create_hillCounter = (Create_hillCounter)hillcount->resolve("create_hillCounter");
+
+    if (create_hillCounter) {
+        hillcounter *instance = create_hillCounter();
+
+        if (instance) {
+            instance->visit(&(mediator->getRoute(selectedRow)));
+            QMessageBox pmbx(QMessageBox::Information, "Количество крутых склонов", "");
+            QString text;
+            text += "Количество: " + QString::number(instance->count);
+            pmbx.setText(text);
+            pmbx.exec();
+            delete instance;
+        }
+    }
+}
+
+void MainWindow::showHillTypes() {
+    int selectedRow = getSelectedRow(routeTableWidget);
+    if (selectedRow == -1) {
+        return;
+    }
+    typedef hilltypescounter* (*Create_hillTypesCounter)();
+    Create_hillTypesCounter create_hillTypesCounter = (Create_hillTypesCounter)hilltypes->resolve("create_hillTypesCounter");
+
+    if (create_hillTypesCounter) {
+        hilltypescounter *instance = create_hillTypesCounter();
+
+        if (instance) {
+            instance->visit(&(mediator->getRoute(selectedRow)));
+            QMessageBox pmbx(QMessageBox::Information, "Количество склонов по типам", "");
+            QString text("По крутизне:\n");
+            for (int i = 1; i < instance->heightTypes.size(); ++i) {
+                text += QString::number(i) + ": " + QString::number(instance->heightTypes[i]) + "\n";
+            }
+            text += "\nПо длине:\n";
+            for (int i = 1; i < instance->lengthTypes.size(); ++i) {
+                text += QString::number(i) + ": " + QString::number(instance->lengthTypes[i]) + "\n";
+            }
+            pmbx.setText(text);
+            pmbx.exec();
+            delete instance;
+        }
+    }
+}
+
+void MainWindow::on_pushButton_2_clicked() {
+    while (auto item = ui->operationsLayout->takeAt(0)) {
+        delete item->widget();
+    }
+    loadLibs();
+    addOpButtons();
 }

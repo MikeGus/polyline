@@ -15,7 +15,7 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
-    <item>
+    <item alignment="Qt::AlignVCenter">
      <widget class="QGroupBox" name="routeGroupBox">
       <property name="title">
        <string>Маршруты</string>
@@ -87,6 +87,22 @@
           <string>Создать из полилайна</string>
          </property>
         </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QPushButton" name="pushButton">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>42</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Доп. операции</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1" colspan="3">
+        <layout class="QHBoxLayout" name="operationsLayout"/>
        </item>
       </layout>
      </widget>
@@ -216,6 +232,13 @@
         <widget class="QPushButton" name="showGraphButton">
          <property name="text">
           <string>Показать график высоты</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="2">
+        <widget class="QPushButton" name="pushButton_2">
+         <property name="text">
+          <string>Сканировать новые операции</string>
          </property>
         </widget>
        </item>

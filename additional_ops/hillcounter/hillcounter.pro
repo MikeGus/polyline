@@ -23,13 +23,16 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-        hillcounter.cpp
+        hillcounter.cpp \
+        ../../route.cpp \
+        ../../coordinates.cpp
 
 HEADERS += \
         hillcounter.h \
-        hillcounter_global.h \ 
-    ../../visitor.h
-
+        hillcounter_global.h \
+        ../../visitor.h \
+        ../../route.h \
+        ../../coordinates.h
 unix {
     target.path = /usr/lib
     INSTALLS += target

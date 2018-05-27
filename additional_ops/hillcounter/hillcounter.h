@@ -9,8 +9,6 @@ class HILLCOUNTERSHARED_EXPORT hillcounter: public visitor {
 
 public:
     void visit(route* rm) override;
-
-private:
     unsigned count = 0;
 };
 

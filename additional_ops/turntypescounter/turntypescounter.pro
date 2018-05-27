@@ -23,12 +23,17 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-        turntypescounter.cpp
+        turntypescounter.cpp \
+        ../../route.cpp \
+        ../../coordinates.cpp
+
 
 HEADERS += \
         turntypescounter.h \
         turntypescounter_global.h \ 
-    ../../visitor.h
+        ../../visitor.h \
+        ../../route.h \
+        ../../coordinates.h
 
 unix {
     target.path = /usr/lib

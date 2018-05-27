@@ -55,3 +55,7 @@ unsigned turntypescounter::getAngleType(double angle) {
         return 7;
     }
 }
+
+extern "C" TURNTYPESCOUNTERSHARED_EXPORT  turntypescounter* create_turnTypesCounter() {
+   return new turntypescounter();
+}

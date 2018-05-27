@@ -55,3 +55,7 @@ unsigned hilltypescounter::getHillLengthType(coordinates& c0, coordinates& c1) {
         return 2;
     }
 }
+
+extern "C" HILLTYPESCOUNTERSHARED_EXPORT  hilltypescounter* create_hillTypesCounter() {
+   return new hilltypescounter();
+}

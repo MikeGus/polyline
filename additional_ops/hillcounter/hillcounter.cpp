@@ -19,3 +19,8 @@ void hillcounter::visit(route* rm) {
         }
     }
 }
+
+extern "C" HILLCOUNTERSHARED_EXPORT  hillcounter* create_hillCounter() {
+   return new hillcounter();
+}
+

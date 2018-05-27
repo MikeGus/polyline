@@ -67,10 +67,24 @@ private slots:
 
     void on_showGraphButton_clicked();
 
+    void on_pushButton_clicked();
+
+    void showTurnTypes();
+
+    void showHillCount();
+
+    void showHillTypes();
+
+    void on_pushButton_2_clicked();
+
 private:
     Ui::MainWindow *ui;
     routemanager* routes;
     QUndoStack* undoStack;
+
+    QLibrary* hilltypes;
+    QLibrary* turntypes;
+    QLibrary* hillcount;
 
     void setupUndoStack();
 
@@ -79,6 +93,11 @@ private:
     void saveState();
 
     void loadState();
+
+    void loadLibs();
+
+    void addOpButtons();
+
 };
 
 #endif // MAINWINDOW_H
