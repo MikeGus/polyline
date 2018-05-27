@@ -32,7 +32,7 @@ double turntypescounter::getAngle(coordinates &c0, coordinates &c1, coordinates 
     double cos_angle_top = distance0 * distance0 + distance1 * distance1 - distance2 * distance2;
     double cos_angle_bottom = 2 * distance0 * distance1;
 
-    return acos(cos_angle_top / cos_angle_bottom);
+    return M_PI - acos(cos_angle_top / cos_angle_bottom);
 }
 
 unsigned turntypescounter::getAngleType(double angle) {

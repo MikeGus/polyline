@@ -77,6 +77,8 @@ private slots:
 
     void on_pushButton_2_clicked();
 
+    void on_pointTableWidget_cellClicked(int row, int column);
+
 private:
     Ui::MainWindow *ui;
     routemanager* routes;

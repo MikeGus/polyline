@@ -343,12 +343,12 @@ void MainWindow::showHillTypes() {
             instance->visit(&(mediator->getRoute(selectedRow)));
             QMessageBox pmbx(QMessageBox::Information, "Количество склонов по типам", "");
             QString text("По крутизне:\n");
-            for (int i = 1; i < instance->heightTypes.size(); ++i) {
-                text += QString::number(i) + ": " + QString::number(instance->heightTypes[i]) + "\n";
+            for (int i = 0; i < instance->heightTypes.size(); ++i) {
+                text += QString::number(i + 1) + ": " + QString::number(instance->heightTypes[i]) + "\n";
             }
             text += "\nПо длине:\n";
-            for (int i = 1; i < instance->lengthTypes.size(); ++i) {
-                text += QString::number(i) + ": " + QString::number(instance->lengthTypes[i]) + "\n";
+            for (int i = 0; i < instance->lengthTypes.size(); ++i) {
+                text += QString::number(i + 1) + ": " + QString::number(instance->lengthTypes[i]) + "\n";
             }
             pmbx.setText(text);
             pmbx.exec();
@@ -361,6 +361,14 @@ void MainWindow::on_pushButton_2_clicked() {
     while (auto item = ui->operationsLayout->takeAt(0)) {
         delete item->widget();
     }
+
     loadLibs();
     addOpButtons();
+}
+
+void MainWindow::on_pointTableWidget_cellClicked(int row, int column) {
+    Q_UNUSED(column);
+    ui->latitudeDoubleSpinBox->setValue(pointTableWidget->item(row, 0)->text().toDouble());
+    ui->longitudeDoubleSpinBox->setValue(pointTableWidget->item(row, 1)->text().toDouble());
+    ui->heightDoubleSpinBox->setValue(pointTableWidget->item(row, 2)->text().toDouble());
 }
