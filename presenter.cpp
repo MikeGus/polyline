@@ -287,12 +287,18 @@ void presenter::loadLibs() {
         libraries[pos].setFileName(QString("operations/") + entry);
         if (libraries[pos].load()) {
             QPushButton* newBtn = view->addOpButton(entry);
-            if (entry == "libhillcounter.so") {
-                connect(newBtn, SIGNAL(clicked(bool)), this, SLOT(showHillCount()));
-            } else if (entry == "libhilltypescounter.so") {
-                connect(newBtn, SIGNAL(clicked(bool)), this, SLOT(showHillTypes()));
-            } else if (entry == "libturntypescounter.so") {
-                connect(newBtn, SIGNAL(clicked(bool)), this, SLOT(showTurnTypes()));
+            switch (pos) {
+            case 0:
+                connect(newBtn, SIGNAL(clicked(bool)), this, SLOT(op0()));
+                break;
+            case 1:
+                connect(newBtn, SIGNAL(clicked(bool)), this, SLOT(op1()));
+                break;
+            case 2:
+                connect(newBtn, SIGNAL(clicked(bool)), this, SLOT(op2()));
+                break;
+            default:
+                break;
             }
             pos++;
         } else {
@@ -302,15 +308,15 @@ void presenter::loadLibs() {
     }
 }
 
-void presenter::showHillCount() {
+void presenter::op0() {
     externalOperation(0);
 }
 
-void presenter::showHillTypes() {
+void presenter::op1() {
     externalOperation(1);
 }
 
-void presenter::showTurnTypes() {
+void presenter::op2() {
     externalOperation(2);
 }
 

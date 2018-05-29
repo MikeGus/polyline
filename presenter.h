@@ -61,11 +61,11 @@ public slots:
 
     route& getRoute(size_t routePosition);
 
-    void showHillCount();
+    void op0();
 
-    void showHillTypes();
+    void op1();
 
-    void showTurnTypes();
+    void op2();
 
     void externalOperation(int number);
 

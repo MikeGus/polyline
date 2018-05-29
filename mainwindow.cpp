@@ -19,8 +19,6 @@
 #include <QPushButton>
 #include "coordinates.h"
 
-#include "libheaders.h"
-
 MainWindow::MainWindow(QWidget *parent) :
     baseview(parent),
     ui(new Ui::MainWindow) {
