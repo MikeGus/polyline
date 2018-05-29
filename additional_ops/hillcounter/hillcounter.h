@@ -8,7 +8,7 @@
 class HILLCOUNTERSHARED_EXPORT hillcounter: public visitor {
 
 public:
-    void visit(route* rm) override;
+    QString visit(route* rm) override;
     unsigned count = 0;
 };
 

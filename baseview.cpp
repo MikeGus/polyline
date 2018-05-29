@@ -143,3 +143,18 @@ void baseview::updatePlot(size_t selectedRow) {
     plot->graph(0)->setData(x, y);
     plot->replot();
 }
+
+QPushButton* baseview::addOpButton(QString& name) {
+    Q_UNUSED(name);
+    return nullptr;
+}
+
+size_t baseview::getCurrentRoute() {
+    return this->getSelectedRow(routeTableWidget);
+}
+
+void baseview::displayMessageBox(QString& message) {
+    QMessageBox pmbx(QMessageBox::Information, "Информация", "");
+    pmbx.setText(message);
+    pmbx.exec();
+}

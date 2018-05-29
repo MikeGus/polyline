@@ -55,7 +55,8 @@ HEADERS += \
     baseview.h \
     testview.h \
     qcustomplot/qcustomplot.h \
-    visitor.h
+    visitor.h \
+    libheaders.h
 
 FORMS += \
         mainwindow.ui

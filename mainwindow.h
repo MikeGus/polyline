@@ -42,6 +42,10 @@ signals:
 
     void loadStateSignal();
 
+    void loadLibsSignal();
+
+    void showLibsSignal();
+
 private slots:
     void on_addRouteButton_clicked();
 
@@ -69,12 +73,6 @@ private slots:
 
     void on_pushButton_clicked();
 
-    void showTurnTypes();
-
-    void showHillCount();
-
-    void showHillTypes();
-
     void on_pushButton_2_clicked();
 
     void on_pointTableWidget_cellClicked(int row, int column);
@@ -98,7 +96,7 @@ private:
 
     void loadLibs();
 
-    void addOpButtons();
+    QPushButton* addOpButton(QString& name);
 
 };
 

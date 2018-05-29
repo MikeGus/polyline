@@ -2,10 +2,10 @@
 #include "../../route.h"
 #include <cmath>
 
-void hillcounter::visit(route* rm) {
+QString hillcounter::visit(route* rm) {
     unsigned pointCount = rm->getNumberOfPoints();
     if (pointCount < 2) {
-        return;
+        return QString();
     }
 
     unsigned roadCount = pointCount - 1;
@@ -18,9 +18,13 @@ void hillcounter::visit(route* rm) {
             count++;
         }
     }
+    QString result("Количество: ");
+    result += QString::number(count) + "\n";
+
+    return result;
 }
 
-extern "C" HILLCOUNTERSHARED_EXPORT  hillcounter* create_hillCounter() {
+extern "C" HILLCOUNTERSHARED_EXPORT  visitor* createInstance() {
    return new hillcounter();
 }
 

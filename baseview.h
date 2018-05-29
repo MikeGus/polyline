@@ -31,6 +31,12 @@ public slots:
 
     virtual void displayError(const char* msg) = 0;
 
+    virtual void displayMessageBox(QString& message);
+
+    virtual QPushButton* addOpButton(QString& name);
+
+    size_t getCurrentRoute();
+
 protected slots:
 
     void updateRouteStats(size_t selectedRow);

@@ -24,7 +24,7 @@ class HILLTYPESCOUNTERSHARED_EXPORT hilltypescounter: public visitor {
 public:
     hilltypescounter();
 
-    void visit(route* rm) override;
+    QString visit(route* rm) override;
 
     QVector<unsigned> heightTypes;
 

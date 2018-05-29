@@ -7,10 +7,10 @@ turntypescounter::turntypescounter() {
     turns.fill(0);
 }
 
-void turntypescounter::visit(route* rm) {
+QString turntypescounter::visit(route* rm) {
     unsigned pointCount = rm->getNumberOfPoints();
     if (pointCount < 3) {
-        return;
+        return QString();
     }
     unsigned turnsCount = pointCount - 2;
 
@@ -18,6 +18,15 @@ void turntypescounter::visit(route* rm) {
         unsigned turnType = checkTurnType((*rm)[i], (*rm)[i + 1], (*rm)[i + 2]);
         turns[turnType]++;
     }
+
+    QString text;
+    int i = 0;
+    for (auto& count : turns) {
+        text += QString::number(i) + ": " + QString::number(count) + "\n";
+        ++i;
+    }
+
+    return text;
 }
 
 unsigned turntypescounter::checkTurnType(coordinates &c0, coordinates &c1, coordinates &c2) {
@@ -56,6 +65,6 @@ unsigned turntypescounter::getAngleType(double angle) {
     }
 }
 
-extern "C" TURNTYPESCOUNTERSHARED_EXPORT  turntypescounter* create_turnTypesCounter() {
+extern "C" TURNTYPESCOUNTERSHARED_EXPORT  visitor* createInstance() {
    return new turntypescounter();
 }

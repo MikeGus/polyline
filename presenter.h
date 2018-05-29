@@ -7,6 +7,8 @@
 #include <QStringList>
 #include "routemanager.h"
 
+#include <QLibrary>
+
 class baseview;
 
 static const QString backupPath("savedstate.dat");
@@ -17,8 +19,12 @@ public:
     presenter(QUndoStack* undoStack, routemanager* routeManager, baseview* view,
               QObject *parent = nullptr);
 
+    ~presenter();
+
 signals:
     void displayError(const char* msg);
+
+    void addButton(QString& btnName);
 
 public slots:
     void addSampleRoute(QString& name);
@@ -40,6 +46,8 @@ public slots:
 
     void loadState();
 
+    void loadLibs();
+
     void addRouteToView(route& newRoute, size_t position);
 
     void removeRouteFromView(size_t position);
@@ -53,11 +61,24 @@ public slots:
 
     route& getRoute(size_t routePosition);
 
+    void showHillCount();
+
+    void showHillTypes();
+
+    void showTurnTypes();
+
+    void externalOperation(int number);
+
+    void showExternalOps();
+
 private:
     QUndoStack* undoStack;
     routemanager* routeManager;
 
     baseview* view;
+
+    QLibrary* libraries;
+    size_t libCount = 0;
 };
 
 #endif // PRESENTER_H

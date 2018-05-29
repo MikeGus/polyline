@@ -9,7 +9,7 @@ hilltypescounter::hilltypescounter() {
     lengthTypes.fill(0);
 }
 
-void hilltypescounter::visit(route *rm) {
+QString hilltypescounter::visit(route *rm) {
     unsigned pointCount = rm->getNumberOfPoints();
     unsigned hillCount = pointCount - 1;
 
@@ -21,6 +21,17 @@ void hilltypescounter::visit(route *rm) {
             lengthTypes[lengthType]++;
         }
     }
+
+    QString text("По крутизне:\n");
+    for (int i = 0; i < heightTypes.size(); ++i) {
+        text += QString::number(i + 1) + ": " + QString::number(heightTypes[i]) + "\n";
+    }
+    text += "\nПо длине:\n";
+    for (int i = 0; i < lengthTypes.size(); ++i) {
+        text += QString::number(i + 1) + ": " + QString::number(lengthTypes[i]) + "\n";
+    }
+
+    return text;
 }
 
 unsigned hilltypescounter::getHillHeightType(coordinates& c0, coordinates& c1) {
@@ -56,6 +67,6 @@ unsigned hilltypescounter::getHillLengthType(coordinates& c0, coordinates& c1) {
     }
 }
 
-extern "C" HILLTYPESCOUNTERSHARED_EXPORT  hilltypescounter* create_hillTypesCounter() {
+extern "C" HILLTYPESCOUNTERSHARED_EXPORT  visitor* createInstance() {
    return new hilltypescounter();
 }

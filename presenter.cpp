@@ -12,9 +12,16 @@
 #include "command/deletewaypointcommand.h"
 #include "command/editwaypointcommand.h"
 #include "baseview.h"
+#include "libheaders.h"
 
 presenter::presenter(QUndoStack* undoStack, routemanager* routeManager, baseview* view, QObject *parent) :
-    QObject(parent), undoStack(undoStack), routeManager(routeManager), view(view) {
+    QObject(parent), undoStack(undoStack), routeManager(routeManager), view(view), libraries(nullptr){
+}
+
+presenter::~presenter() {
+    if (libraries) {
+        delete libraries;
+    }
 }
 
 void presenter::addSampleRoute(QString& name) {
@@ -258,4 +265,79 @@ void presenter::editWaypointInView(size_t routePosition, coordinates& waypoint,
 
 route& presenter::getRoute(size_t routePosition) {
     return routeManager->at(routePosition);
+}
+
+void presenter::loadLibs() {
+    libCount = 0;
+    if (libraries != nullptr) {
+        delete[] libraries;
+        libraries = nullptr;
+    }
+
+    QDir libDir("operations");
+    libCount = libDir.entryList(QStringList("*.so")).size();
+    if (libCount == 0) {
+        return;
+    }
+
+    libraries = new QLibrary[libCount];
+
+    int pos = 0;
+    for (QString& entry : libDir.entryList(QStringList("*.so"))) {
+        libraries[pos].setFileName(QString("operations/") + entry);
+        if (libraries[pos].load()) {
+            QPushButton* newBtn = view->addOpButton(entry);
+            if (entry == "libhillcounter.so") {
+                connect(newBtn, SIGNAL(clicked(bool)), this, SLOT(showHillCount()));
+            } else if (entry == "libhilltypescounter.so") {
+                connect(newBtn, SIGNAL(clicked(bool)), this, SLOT(showHillTypes()));
+            } else if (entry == "libturntypescounter.so") {
+                connect(newBtn, SIGNAL(clicked(bool)), this, SLOT(showTurnTypes()));
+            }
+            pos++;
+        } else {
+            qDebug() << libraries[pos].errorString();
+            libCount--;
+        }
+    }
+}
+
+void presenter::showHillCount() {
+    externalOperation(0);
+}
+
+void presenter::showHillTypes() {
+    externalOperation(1);
+}
+
+void presenter::showTurnTypes() {
+    externalOperation(2);
+}
+
+void presenter::externalOperation(int number) {
+    int currentRoute = view->getCurrentRoute();
+    if (currentRoute == -1) {
+        return;
+    }
+    typedef visitor* (*CreateInstance)();
+    CreateInstance createInstance = (CreateInstance)libraries[number].resolve("createInstance");
+
+    if (createInstance) {
+        visitor *instance = createInstance();
+        if (instance) {
+            QString msg = instance->visit(&(routeManager->at(currentRoute)));
+            delete instance;
+
+            view->displayMessageBox(msg);
+        }
+    }
+}
+
+void presenter::showExternalOps() {
+    QString text("Библиотеки:\n");
+    for (size_t i = 0; i < libCount; ++i) {
+        text += QFileInfo(libraries[i].fileName()).fileName() + "\n";
+    }
+
+    view->displayMessageBox(text);
 }

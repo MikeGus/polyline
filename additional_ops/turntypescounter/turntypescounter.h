@@ -12,7 +12,7 @@ class TURNTYPESCOUNTERSHARED_EXPORT turntypescounter: public visitor {
 public:
     turntypescounter();
 
-    void visit(route* rm) override;
+    QString visit(route* rm) override;
 
     QVector<unsigned> turns;
 
