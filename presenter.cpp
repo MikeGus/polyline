@@ -15,12 +15,16 @@
 #include "libheaders.h"
 
 presenter::presenter(QUndoStack* undoStack, routemanager* routeManager, baseview* view, QObject *parent) :
-    QObject(parent), undoStack(undoStack), routeManager(routeManager), view(view), libraries(nullptr){
+    QObject(parent), undoStack(undoStack), routeManager(routeManager), view(view), libraries(nullptr),
+    buttons(nullptr) {
 }
 
 presenter::~presenter() {
     if (libraries) {
         delete libraries;
+    }
+    if (buttons) {
+        delete buttons;
     }
 }
 
@@ -273,6 +277,10 @@ void presenter::loadLibs() {
         delete[] libraries;
         libraries = nullptr;
     }
+    if (buttons != nullptr) {
+        delete[] buttons;
+        buttons = nullptr;
+    }
 
     QDir libDir("operations");
     libCount = libDir.entryList(QStringList("*.so")).size();
@@ -281,25 +289,15 @@ void presenter::loadLibs() {
     }
 
     libraries = new QLibrary[libCount];
+    buttons = new QPushButton*[libCount];
 
     int pos = 0;
     for (QString& entry : libDir.entryList(QStringList("*.so"))) {
         libraries[pos].setFileName(QString("operations/") + entry);
         if (libraries[pos].load()) {
             QPushButton* newBtn = view->addOpButton(entry);
-            switch (pos) {
-            case 0:
-                connect(newBtn, SIGNAL(clicked(bool)), this, SLOT(op0()));
-                break;
-            case 1:
-                connect(newBtn, SIGNAL(clicked(bool)), this, SLOT(op1()));
-                break;
-            case 2:
-                connect(newBtn, SIGNAL(clicked(bool)), this, SLOT(op2()));
-                break;
-            default:
-                break;
-            }
+            buttons[pos] = newBtn;
+            connect(newBtn, SIGNAL(clicked(bool)), this, SLOT(chooseOp()));
             pos++;
         } else {
             qDebug() << libraries[pos].errorString();
@@ -308,16 +306,12 @@ void presenter::loadLibs() {
     }
 }
 
-void presenter::op0() {
-    externalOperation(0);
-}
-
-void presenter::op1() {
-    externalOperation(1);
-}
-
-void presenter::op2() {
-    externalOperation(2);
+void presenter::chooseOp() {
+    for (size_t i = 0; i < libCount; ++i) {
+        if (sender() == (QObject*) buttons[i]) {
+            externalOperation(i);
+        }
+    }
 }
 
 void presenter::externalOperation(int number) {

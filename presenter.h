@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QUndoStack>
+#include <QPushButton>
 #include <QTableWidget>
 #include <QStringList>
 #include "routemanager.h"
@@ -61,11 +62,7 @@ public slots:
 
     route& getRoute(size_t routePosition);
 
-    void op0();
-
-    void op1();
-
-    void op2();
+    void chooseOp();
 
     void externalOperation(int number);
 
@@ -78,6 +75,7 @@ private:
     baseview* view;
 
     QLibrary* libraries;
+    QPushButton** buttons;
     size_t libCount = 0;
 };
 
